@@ -345,20 +345,39 @@ export async function fetchBondYieldComparison() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// PUBLIC FINANCES
+// PUBLIC FINANCES (% of GNI, not GDP)
+// Ireland's GDP is distorted by multinational activity. We fetch absolute
+// values in MIO_EUR and divide by GNI from World Bank (same approach as
+// fetchFiscalAsPercentGNI). GNI* would be ideal but is CSO-specific.
 // ═══════════════════════════════════════════════════════════════════════
 
-// Tax revenue by type (% GDP, annual)
+// Helper: get GNI map (period → MIO_EUR)
+async function getGNIMap() {
+  const gniRaw = await fetchWorldBankData('IRL', 'NY.GNP.MKTP.CN', 2015, 2025)
+  return new Map(gniRaw.map(d => [d.period, d.value / 1e6]))
+}
+
+// Tax revenue by type (% GNI, annual)
 export async function fetchTaxRevenue() {
   const items = ['D2_D5_D91', 'D2', 'D5', 'D61']
-  const results = await Promise.all(
-    items.map(na_item =>
+  const [gniMap, ...taxResults] = await Promise.all([
+    getGNIMap(),
+    ...items.map(na_item =>
       fetchEurostatData('gov_10a_taxag', {
-        geo: 'IE', na_item, sector: 'S13', unit: 'PC_GDP', sinceTimePeriod: '2015',
-      }).then(data => data.map(d => ({ ...d, category: na_item })))
-    )
+        geo: 'IE', na_item, sector: 'S13', unit: 'MIO_NAC', sinceTimePeriod: '2015',
+      })
+    ),
+  ])
+
+  return items.flatMap((na_item, i) =>
+    taxResults[i]
+      .filter(d => gniMap.has(d.period) && gniMap.get(d.period) > 0)
+      .map(d => ({
+        period: d.period,
+        value: round1((d.value / gniMap.get(d.period)) * 100),
+        category: na_item,
+      }))
   )
-  return results.flat()
 }
 
 const TAX_LABELS = {
@@ -369,18 +388,28 @@ const TAX_LABELS = {
 }
 export { TAX_LABELS }
 
-// Government spending by COFOG function (% GDP, annual)
+// Government spending by COFOG function (% GNI, annual)
 export async function fetchGovSpending() {
   const cofogs = ['TOTAL', 'GF01', 'GF04', 'GF07', 'GF09', 'GF10']
-  const results = await Promise.all(
-    cofogs.map(cofog99 =>
+  const [gniMap, ...spendResults] = await Promise.all([
+    getGNIMap(),
+    ...cofogs.map(cofog99 =>
       fetchEurostatData('gov_10a_exp', {
-        geo: 'IE', cofog99, na_item: 'TE', sector: 'S13', unit: 'PC_GDP',
+        geo: 'IE', cofog99, na_item: 'TE', sector: 'S13', unit: 'MIO_NAC',
         sinceTimePeriod: '2015',
-      }).then(data => data.map(d => ({ ...d, cofog: cofog99 })))
-    )
+      })
+    ),
+  ])
+
+  return cofogs.flatMap((cofog99, i) =>
+    spendResults[i]
+      .filter(d => gniMap.has(d.period) && gniMap.get(d.period) > 0)
+      .map(d => ({
+        period: d.period,
+        value: round1((d.value / gniMap.get(d.period)) * 100),
+        cofog: cofog99,
+      }))
   )
-  return results.flat()
 }
 
 const COFOG_LABELS = {

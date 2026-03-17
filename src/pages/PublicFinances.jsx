@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { Landmark, PieChart, Info } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
@@ -99,14 +99,14 @@ export default function PublicFinances() {
     >
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Public Finances</h1>
-        <p className="text-slate-500 mt-1">Government revenue and expenditure — Eurostat</p>
+        <p className="text-slate-500 mt-1">Government revenue and expenditure as % of GNI — Eurostat + World Bank</p>
       </div>
 
       {/* ── KPI Cards ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Tax Revenue"
-          value={totalTaxLatest ? `${totalTaxLatest.value}% GDP` : '\u2014'}
+          value={totalTaxLatest ? `${totalTaxLatest.value}% GNI` : '\u2014'}
           subtitle={totalTaxLatest ? `${totalTaxLatest.period} \u00b7 Eurostat` : errors.taxRevenue ? 'Unavailable' : 'Loading\u2026'}
           icon={Landmark}
           color="green"
@@ -114,7 +114,7 @@ export default function PublicFinances() {
         />
         <KpiCard
           title="Income & Wealth Taxes"
-          value={taxLatest ? `${taxLatest.value}% GDP` : '\u2014'}
+          value={taxLatest ? `${taxLatest.value}% GNI` : '\u2014'}
           subtitle={taxLatest ? `${taxLatest.period} \u00b7 incl. corporation tax` : errors.taxRevenue ? 'Unavailable' : 'Loading\u2026'}
           icon={Landmark}
           color="sky"
@@ -122,7 +122,7 @@ export default function PublicFinances() {
         />
         <KpiCard
           title="Total Expenditure"
-          value={totalSpendLatest ? `${totalSpendLatest.value}% GDP` : '\u2014'}
+          value={totalSpendLatest ? `${totalSpendLatest.value}% GNI` : '\u2014'}
           subtitle={totalSpendLatest ? `${totalSpendLatest.period} \u00b7 Eurostat` : errors.govSpending ? 'Unavailable' : 'Loading\u2026'}
           icon={PieChart}
           color="amber"
@@ -130,7 +130,7 @@ export default function PublicFinances() {
         />
         <KpiCard
           title="Social Protection"
-          value={socialLatest ? `${socialLatest.value}% GDP` : '\u2014'}
+          value={socialLatest ? `${socialLatest.value}% GNI` : '\u2014'}
           subtitle={socialLatest ? `${socialLatest.period} \u00b7 largest COFOG category` : errors.govSpending ? 'Unavailable' : 'Loading\u2026'}
           icon={PieChart}
           color="rose"
@@ -138,10 +138,33 @@ export default function PublicFinances() {
         />
       </div>
 
+      {/* ── Info Box ───────────────────────────────────────────────────── */}
+      <Card className="border-sky-200 bg-sky-50">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
+          <p className="text-sm text-sky-800">
+            These ratios use GNI (World Bank) as the denominator instead of GDP.
+            Ireland&apos;s headline GDP is significantly inflated by multinational IP transfers
+            and aircraft leasing, making GDP-based ratios misleadingly low.
+            GNI strips out net factor income flows and gives a truer picture of fiscal effort.
+            The CSO&apos;s GNI* (Modified GNI) adjusts further for depreciation on foreign-owned
+            IP and aircraft — see the{' '}
+            <a
+              href="https://www.cso.ie/en/statistics/nationalaccounts/quarterlynationalaccounts/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline"
+            >
+              CSO National Accounts
+            </a>.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* ── Tax Revenue Chart ──────────────────────────────────────────── */}
       <ChartCard
-        title="Tax Revenue by Category (% of GDP, annual)"
-        subtitle="Source: Eurostat gov_10a_taxag"
+        title="Tax Revenue by Category (% of GNI, annual)"
+        subtitle="Source: Eurostat gov_10a_taxag + World Bank GNI"
         loading={loading}
         error={errors.taxRevenue}
       >
@@ -167,8 +190,8 @@ export default function PublicFinances() {
 
       {/* ── Government Spending Chart ──────────────────────────────────── */}
       <ChartCard
-        title="Government Spending by Function (% of GDP, annual)"
-        subtitle="Source: Eurostat gov_10a_exp (COFOG)"
+        title="Government Spending by Function (% of GNI, annual)"
+        subtitle="Source: Eurostat gov_10a_exp (COFOG) + World Bank GNI"
         loading={loading}
         error={errors.govSpending}
       >
@@ -191,29 +214,6 @@ export default function PublicFinances() {
           ))}
         </LineChart>
       </ChartCard>
-
-      {/* ── Info Box ───────────────────────────────────────────────────── */}
-      <Card className="border-sky-200 bg-sky-50">
-        <CardContent className="p-4 flex items-start gap-3">
-          <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-sky-800">
-            These fiscal ratios use GDP as the denominator (Eurostat convention). Ireland&apos;s
-            headline GDP is significantly inflated by multinational intellectual-property transfers
-            and aircraft leasing, meaning tax-to-GDP and spending-to-GDP ratios appear artificially
-            low compared to peer countries. The CSO&apos;s Modified Gross National Income (GNI*) is
-            a better measure of domestic economic activity — roughly 40% below headline GDP. See the{' '}
-            <a
-              href="https://www.cso.ie/en/statistics/nationalaccounts/quarterlynationalaccounts/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium underline"
-            >
-              CSO National Accounts
-            </a>{' '}
-            for GNI* estimates.
-          </p>
-        </CardContent>
-      </Card>
     </motion.div>
   )
 }
