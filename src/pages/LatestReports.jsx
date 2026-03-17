@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 import { ReportCard } from '@/components/ReportCard'
 import { LATEST_REPORTS } from '@/lib/constants'
 
-const filters = ['All', 'cso', 'cbi', 'dof', 'oecd']
-const filterLabels = { All: 'All', cso: 'CSO', cbi: 'CBI', dof: 'DoF', oecd: 'OECD' }
+const filters = ['All', 'cso', 'cbi', 'dof', 'oecd', 'esri', 'eurostat']
+const filterLabels = { All: 'All', cso: 'CSO', cbi: 'CBI', dof: 'DoF', oecd: 'OECD', esri: 'ESRI', eurostat: 'Eurostat' }
 
 export default function LatestReports() {
   const [activeFilter, setActiveFilter] = useState('All')

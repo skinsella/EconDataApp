@@ -91,10 +91,28 @@ export const LATEST_REPORTS = [
     description: 'Monthly CPI measuring the change in prices of consumer goods and services.',
   },
   {
+    title: 'CSO Monthly Unemployment',
+    source: 'cso',
+    url: 'https://www.cso.ie/en/statistics/labourmarket/monthlyunemployment/',
+    description: 'Monthly seasonally adjusted unemployment estimates from the CSO.',
+  },
+  {
+    title: 'CSO Retail Sales Index',
+    source: 'cso',
+    url: 'https://www.cso.ie/en/statistics/servicesandenterprises/retailsalesindex/',
+    description: 'Monthly index of retail sales volume and value.',
+  },
+  {
     title: 'Central Bank Quarterly Bulletin',
     source: 'cbi',
     url: 'https://www.centralbank.ie/publication/quarterly-bulletins',
     description: 'Economic analysis, forecasts and financial stability commentary from the CBI.',
+  },
+  {
+    title: 'Central Bank Economic Letters',
+    source: 'cbi',
+    url: 'https://www.centralbank.ie/publication/economic-letters',
+    description: 'Short research papers on current economic and financial topics.',
   },
   {
     title: 'Department of Finance Publications',
@@ -107,6 +125,30 @@ export const LATEST_REPORTS = [
     source: 'oecd',
     url: 'https://www.oecd.org/en/publications/oecd-economic-surveys-ireland_19990294.html',
     description: 'Periodic assessment of the Irish economy with policy recommendations.',
+  },
+  {
+    title: 'OECD Economic Outlook',
+    source: 'oecd',
+    url: 'https://www.oecd.org/en/publications/oecd-economic-outlook_16097408.html',
+    description: 'Biannual global and country-level economic projections and analysis.',
+  },
+  {
+    title: 'ESRI Quarterly Economic Commentary',
+    source: 'esri',
+    url: 'https://www.esri.ie/publications?type=Quarterly%20Economic%20Commentary',
+    description: 'Quarterly assessment of the Irish economy with short-term forecasts from the ESRI.',
+  },
+  {
+    title: 'ESRI Research Bulletins',
+    source: 'esri',
+    url: 'https://www.esri.ie/publications?type=Research%20Bulletin',
+    description: 'Short summaries of ESRI working papers on economic and social policy.',
+  },
+  {
+    title: 'Eurostat News Releases',
+    source: 'eurostat',
+    url: 'https://ec.europa.eu/eurostat/web/main/news/news-releases',
+    description: 'Latest statistical releases from Eurostat covering the EU and euro area.',
   },
 ]
 

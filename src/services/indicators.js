@@ -84,26 +84,50 @@ export async function fetchHousePriceIndex() {
   return data.map(d => ({ period: fmtQuarter(d.period), value: round1(d.value) }))
 }
 
-// ── Government Balance (% of GDP, annual) ── Eurostat gov_10dd_edpt1 ───
+// ── Fiscal ratios as % of GNI (not GDP) ── Eurostat ────────────────────
+// Ireland's GDP is distorted by multinational activity. GNI is a better
+// denominator. GNI* (CSO-specific) would be even better but is not
+// available from Eurostat. We fetch GNI from nama_10_gdp (B5G), and
+// gov debt/balance in absolute EUR from gov_10dd_edpt1, then compute ratios.
+
+export async function fetchFiscalAsPercentGNI() {
+  // GNI from World Bank (NY.GNP.MKTP.CN = current LCU = EUR for Ireland)
+  // Debt & balance from Eurostat in MIO_EUR
+  const [gniRaw, debtData, balData] = await Promise.all([
+    fetchWorldBankData('IRL', 'NY.GNP.MKTP.CN', 2015, 2025),
+    fetchEurostatData('gov_10dd_edpt1', {
+      geo: 'IE', na_item: 'GD', sector: 'S13', unit: 'MIO_EUR', sinceTimePeriod: '2015',
+    }),
+    fetchEurostatData('gov_10dd_edpt1', {
+      geo: 'IE', na_item: 'B9', sector: 'S13', unit: 'MIO_EUR', sinceTimePeriod: '2015',
+    }),
+  ])
+
+  // World Bank returns GNI in EUR units; convert to MIO_EUR to match Eurostat
+  const gniMap = new Map(gniRaw.map(d => [d.period, d.value / 1e6]))
+
+  const debtPctGNI = debtData
+    .filter(d => gniMap.has(d.period) && gniMap.get(d.period) > 0)
+    .map(d => ({ period: d.period, value: round1((d.value / gniMap.get(d.period)) * 100) }))
+
+  const balPctGNI = balData
+    .filter(d => gniMap.has(d.period) && gniMap.get(d.period) > 0)
+    .map(d => ({ period: d.period, value: round1((d.value / gniMap.get(d.period)) * 100) }))
+
+  return { debtPctGNI, balPctGNI }
+}
+
+// Keep the old GDP-based versions as fallbacks
 export async function fetchGovBalance() {
   const data = await fetchEurostatData('gov_10dd_edpt1', {
-    geo: 'IE',
-    na_item: 'B9',
-    sector: 'S13',
-    unit: 'PC_GDP',
-    sinceTimePeriod: '2015',
+    geo: 'IE', na_item: 'B9', sector: 'S13', unit: 'PC_GDP', sinceTimePeriod: '2015',
   })
   return data.map(d => ({ period: d.period, value: round1(d.value) }))
 }
 
-// ── Government Debt (% of GDP, annual) ── Eurostat gov_10dd_edpt1 ──────
 export async function fetchGovDebt() {
   const data = await fetchEurostatData('gov_10dd_edpt1', {
-    geo: 'IE',
-    na_item: 'GD',
-    sector: 'S13',
-    unit: 'PC_GDP',
-    sinceTimePeriod: '2015',
+    geo: 'IE', na_item: 'GD', sector: 'S13', unit: 'PC_GDP', sinceTimePeriod: '2015',
   })
   return data.map(d => ({ period: d.period, value: round1(d.value) }))
 }

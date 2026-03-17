@@ -12,8 +12,7 @@ import {
   fetchYouthUnemployment,
   fetchHICPInflation,
   fetchHousePriceIndex,
-  fetchGovBalance,
-  fetchGovDebt,
+  fetchFiscalAsPercentGNI,
 } from '@/services/indicators'
 
 const tabs = ['Macro', 'Employment', 'Prices', 'Housing', 'Fiscal']
@@ -28,34 +27,46 @@ export default function IrishEconomy() {
     let cancelled = false
 
     async function loadAll() {
-      const fetchers = {
+      const standardFetchers = {
         gdp: fetchGDPGrowth,
         unemployment: fetchUnemploymentRate,
         youthUnemployment: fetchYouthUnemployment,
         hicp: fetchHICPInflation,
         housePrices: fetchHousePriceIndex,
-        govBalance: fetchGovBalance,
-        govDebt: fetchGovDebt,
       }
 
-      const keys = Object.keys(fetchers)
-      const results = await Promise.allSettled(keys.map((k) => fetchers[k]()))
+      const stdKeys = Object.keys(standardFetchers)
+      const [stdResults, fiscalResult] = await Promise.all([
+        Promise.allSettled(stdKeys.map((k) => standardFetchers[k]())),
+        fetchFiscalAsPercentGNI().catch((e) => ({ error: e.message })),
+      ])
 
       if (cancelled) return
 
       const newData = {}
       const newErrors = {}
 
-      results.forEach((result, i) => {
+      stdResults.forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value.length > 0) {
-          newData[keys[i]] = result.value
+          newData[stdKeys[i]] = result.value
         } else {
-          newErrors[keys[i]] =
+          newErrors[stdKeys[i]] =
             result.status === 'rejected'
               ? result.reason?.message || 'Unknown error'
               : 'No data available'
         }
       })
+
+      // Fiscal (% GNI)
+      if (fiscalResult.error) {
+        newErrors.govBalance = fiscalResult.error
+        newErrors.govDebt = fiscalResult.error
+      } else {
+        if (fiscalResult.balPctGNI?.length > 0) newData.govBalance = fiscalResult.balPctGNI
+        else newErrors.govBalance = 'No data available'
+        if (fiscalResult.debtPctGNI?.length > 0) newData.govDebt = fiscalResult.debtPctGNI
+        else newErrors.govDebt = 'No data available'
+      }
 
       setData(newData)
       setErrors(newErrors)
@@ -335,7 +346,7 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
         <KpiCard
           title="Government Balance"
           value={bal ? `${bal.value > 0 ? '+' : ''}${bal.value}%` : '\u2014'}
-          subtitle={bal ? `${bal.period} \u00b7 % GDP \u00b7 Eurostat` : 'Loading\u2026'}
+          subtitle={bal ? `${bal.period} \u00b7 % GNI \u00b7 Eurostat` : 'Loading\u2026'}
           icon={Landmark}
           color="green"
           loading={loading}
@@ -343,16 +354,35 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
         <KpiCard
           title="Government Debt"
           value={debt ? `${debt.value}%` : '\u2014'}
-          subtitle={debt ? `${debt.period} \u00b7 % GDP \u00b7 Eurostat` : 'Loading\u2026'}
+          subtitle={debt ? `${debt.period} \u00b7 % GNI \u00b7 Eurostat` : 'Loading\u2026'}
           icon={Landmark}
           color="slate"
           loading={loading}
         />
       </div>
 
+      <Card className="border-sky-200 bg-sky-50">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
+          <p className="text-sm text-sky-800">
+            Fiscal ratios use GNI (Eurostat) as the denominator rather than GDP,
+            which is distorted by multinational activity in Ireland. For GNI*
+            (the CSO&apos;s further-adjusted measure), see the{' '}
+            <a
+              href="https://www.cso.ie/en/statistics/nationalaccounts/quarterlynationalaccounts/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline"
+            >
+              CSO National Accounts
+            </a>.
+          </p>
+        </CardContent>
+      </Card>
+
       <ChartCard
-        title="Government Balance & Debt (% of GDP, annual)"
-        subtitle="Source: Eurostat gov_10dd_edpt1"
+        title="Government Balance & Debt (% of GNI, annual)"
+        subtitle="Source: Eurostat gov_10dd_edpt1 + nama_10_gdp"
         loading={loading}
         error={errors.govBalance && errors.govDebt ? errors.govBalance : undefined}
       >
@@ -362,8 +392,8 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="balance" name="Balance (% GDP)" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} />
-          <Line type="monotone" dataKey="debt" name="Debt (% GDP)" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="balance" name="Balance (% GNI)" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="debt" name="Debt (% GNI)" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ChartCard>
     </div>

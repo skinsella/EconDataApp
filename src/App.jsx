@@ -5,7 +5,7 @@ import IrishEconomy from './pages/IrishEconomy'
 import LatestReports from './pages/LatestReports'
 import TradeReports from './pages/TradeReports'
 import HousingReports from './pages/HousingReports'
-import MediaSentiment from './pages/MediaSentiment'
+import CSOReleases from './pages/CSOReleases'
 import DaysUntil from './pages/DaysUntil'
 import DataSources from './pages/DataSources'
 
@@ -20,7 +20,7 @@ export default function App() {
           <Route path="/latest-reports" element={<LatestReports />} />
           <Route path="/trade-reports" element={<TradeReports />} />
           <Route path="/housing" element={<HousingReports />} />
-          <Route path="/media-sentiment" element={<MediaSentiment />} />
+          <Route path="/cso-releases" element={<CSOReleases />} />
           <Route path="/days-until" element={<DaysUntil />} />
           <Route path="/data-sources" element={<DataSources />} />
         </Routes>

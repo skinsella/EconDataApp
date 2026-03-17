@@ -12,16 +12,16 @@ import {
   fetchYouthUnemployment,
   fetchHICPInflation,
   fetchHousePriceIndex,
-  fetchGovBalance,
+  fetchFiscalAsPercentGNI,
 } from '@/services/indicators'
 
 const INDICATORS = [
-  { key: 'gdp', label: 'GDP Growth', unit: '%', icon: TrendingUp, color: 'sky', chartTitle: 'GDP Growth (% YoY)', fetcher: fetchGDPGrowth, source: 'Eurostat' },
-  { key: 'unemployment', label: 'Unemployment', unit: '%', icon: Users, color: 'amber', chartTitle: 'Unemployment Rate (%)', fetcher: fetchUnemploymentRate, source: 'Eurostat' },
-  { key: 'youthUnemployment', label: 'Youth Unemp.', unit: '%', icon: UserX, color: 'rose', chartTitle: 'Youth Unemployment Rate (%)', fetcher: fetchYouthUnemployment, source: 'Eurostat' },
-  { key: 'hicp', label: 'Inflation (HICP)', unit: '%', icon: DollarSign, color: 'violet', chartTitle: 'HICP Inflation (% annual)', fetcher: fetchHICPInflation, source: 'Eurostat' },
-  { key: 'housePrices', label: 'House Price Idx', unit: '', icon: Home, color: 'emerald', chartTitle: 'House Price Index (2015=100)', fetcher: fetchHousePriceIndex, source: 'Eurostat' },
-  { key: 'govBalance', label: 'Gov. Balance', unit: '% GDP', icon: Landmark, color: 'green', chartTitle: 'Government Balance (% GDP)', fetcher: fetchGovBalance, source: 'Eurostat' },
+  { key: 'gdp', label: 'GDP Growth', unit: '%', icon: TrendingUp, color: 'sky', chartTitle: 'GDP Growth (% YoY)', source: 'Eurostat' },
+  { key: 'unemployment', label: 'Unemployment', unit: '%', icon: Users, color: 'amber', chartTitle: 'Unemployment Rate (%)', source: 'Eurostat' },
+  { key: 'youthUnemployment', label: 'Youth Unemp.', unit: '%', icon: UserX, color: 'rose', chartTitle: 'Youth Unemployment Rate (%)', source: 'Eurostat' },
+  { key: 'hicp', label: 'Inflation (HICP)', unit: '%', icon: DollarSign, color: 'violet', chartTitle: 'HICP Inflation (% annual)', source: 'Eurostat' },
+  { key: 'housePrices', label: 'House Price Idx', unit: '', icon: Home, color: 'emerald', chartTitle: 'House Price Index (2015=100)', source: 'Eurostat' },
+  { key: 'govDebtGNI', label: 'Gov. Debt', unit: '% GNI', icon: Landmark, color: 'green', chartTitle: 'Government Debt (% GNI)', source: 'Eurostat' },
 ]
 
 export default function Dashboard() {
@@ -33,25 +33,42 @@ export default function Dashboard() {
     let cancelled = false
 
     async function loadAll() {
-      const results = await Promise.allSettled(
-        INDICATORS.map((ind) => ind.fetcher())
-      )
+      const fetchers = [
+        fetchGDPGrowth(),
+        fetchUnemploymentRate(),
+        fetchYouthUnemployment(),
+        fetchHICPInflation(),
+        fetchHousePriceIndex(),
+        fetchFiscalAsPercentGNI(),
+      ]
+
+      const results = await Promise.allSettled(fetchers)
 
       if (cancelled) return
 
       const newData = {}
       const newErrors = {}
+      const keys = ['gdp', 'unemployment', 'youthUnemployment', 'hicp', 'housePrices']
 
-      results.forEach((result, i) => {
-        const key = INDICATORS[i].key
+      // Standard indicators
+      results.slice(0, 5).forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value.length > 0) {
-          newData[key] = result.value
+          newData[keys[i]] = result.value
         } else {
-          newErrors[key] = result.status === 'rejected'
+          newErrors[keys[i]] = result.status === 'rejected'
             ? `Failed to load: ${result.reason?.message || 'Unknown error'}`
             : 'No data available from source'
         }
       })
+
+      // Fiscal (% GNI)
+      const fiscal = results[5]
+      if (fiscal.status === 'fulfilled') {
+        if (fiscal.value.debtPctGNI?.length > 0) newData.govDebtGNI = fiscal.value.debtPctGNI
+        else newErrors.govDebtGNI = 'No data available'
+      } else {
+        newErrors.govDebtGNI = `Failed to load: ${fiscal.reason?.message || 'Unknown error'}`
+      }
 
       setData(newData)
       setErrors(newErrors)
@@ -148,7 +165,7 @@ export default function Dashboard() {
       </div>
 
       <p className="text-xs text-slate-400 text-center">
-        All data sourced live from Eurostat. Last refresh: {format(new Date(), 'd MMM yyyy HH:mm')}.
+        All data sourced live from Eurostat. Fiscal ratios use GNI as denominator. Last refresh: {format(new Date(), 'd MMM yyyy HH:mm')}.
       </p>
     </motion.div>
   )

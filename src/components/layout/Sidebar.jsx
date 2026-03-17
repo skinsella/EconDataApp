@@ -7,7 +7,7 @@ import {
   Calendar,
   Home as HomeIcon,
   Globe,
-  Newspaper,
+  ClipboardList,
   BarChart3,
 } from 'lucide-react'
 
@@ -17,7 +17,7 @@ const navigation = [
   { name: 'Latest Reports', path: '/latest-reports', icon: FileText },
   { name: 'Trade Reports', path: '/trade-reports', icon: Globe },
   { name: 'Housing Reports', path: '/housing', icon: HomeIcon },
-  { name: 'Media Sentiment', path: '/media-sentiment', icon: Newspaper },
+  { name: 'CSO Releases', path: '/cso-releases', icon: ClipboardList },
   { name: 'Days Until', path: '/days-until', icon: Calendar },
   { name: 'Data Sources', path: '/data-sources', icon: Database },
 ]
