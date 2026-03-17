@@ -1,10 +1,11 @@
-import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts'
 import { ThumbsUp, Minus, ThumbsDown, Info } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
+import { PageWrapper } from '@/components/PageWrapper'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { CHART_AXIS_TICK, CHART_AXIS_STROKE } from '@/lib/constants'
 
 const sentimentBarData = [
   { name: 'Positive', value: 42 },
@@ -33,14 +34,12 @@ const sentimentBadge = {
   negative: 'bg-red-100 text-red-700',
 }
 
+const xDomain = [0, 100]
+const yAxisWidth = 70
+
 export default function MediaSentiment() {
   return (
-    <motion.div
-      className="p-8 space-y-8 overflow-y-auto h-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <PageWrapper title="Media Sentiment">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Media Sentiment</h1>
         <p className="text-slate-500 mt-1">Sentiment analysis of Irish economic news coverage</p>
@@ -64,8 +63,8 @@ export default function MediaSentiment() {
 
       <ChartCard title="Sentiment Distribution" subtitle="Percentage of analysed headlines">
         <BarChart data={sentimentBarData} layout="vertical">
-          <XAxis type="number" tick={{ fontSize: 12 }} stroke="#94a3b8" domain={[0, 100]} />
-          <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" width={70} />
+          <XAxis type="number" tick={CHART_AXIS_TICK} stroke={CHART_AXIS_STROKE} domain={xDomain} />
+          <YAxis type="category" dataKey="name" tick={CHART_AXIS_TICK} stroke={CHART_AXIS_STROKE} width={yAxisWidth} />
           <Tooltip formatter={(val) => `${val}%`} />
           <Bar dataKey="value" radius={[0, 4, 4, 0]}>
             {sentimentBarData.map((entry, index) => (
@@ -90,6 +89,6 @@ export default function MediaSentiment() {
           ))}
         </div>
       </div>
-    </motion.div>
+    </PageWrapper>
   )
 }

@@ -1,19 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar } from 'lucide-react'
 import { format, parseISO, differenceInDays } from 'date-fns'
 
 export function CountdownCard({ title, targetDate }) {
+  const parsedDate = useMemo(() => parseISO(targetDate), [targetDate])
+  const formattedDate = useMemo(() => format(parsedDate, 'd MMM yyyy'), [parsedDate])
+
   const [daysRemaining, setDaysRemaining] = useState(() =>
-    differenceInDays(parseISO(targetDate), new Date())
+    differenceInDays(parsedDate, new Date())
   )
 
   useEffect(() => {
-    const update = () => setDaysRemaining(differenceInDays(parseISO(targetDate), new Date()))
+    const update = () => setDaysRemaining(differenceInDays(parsedDate, new Date()))
     update()
     const interval = setInterval(update, 60_000)
     return () => clearInterval(interval)
-  }, [targetDate])
+  }, [parsedDate])
 
   const isPast = daysRemaining < 0
 
@@ -29,7 +32,7 @@ export function CountdownCard({ title, targetDate }) {
         </p>
         <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
           <Calendar className="h-3.5 w-3.5" />
-          {format(parseISO(targetDate), 'd MMM yyyy')}
+          {formattedDate}
         </div>
       </CardContent>
     </Card>

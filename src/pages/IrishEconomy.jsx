@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { TrendingUp, Users, UserX, DollarSign, Home, Landmark, Activity, BarChart3 } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
-import { CHART_COLORS } from '@/lib/constants'
+import { PageWrapper } from '@/components/PageWrapper'
+import { CHART_COLORS, CHART_AXIS_TICK, CHART_AXIS_STROKE, CHART_GRID_STROKE, HOUSE_PRICE_INDEX_DATA } from '@/lib/constants'
 
 const tabs = ['Macro', 'Employment', 'Prices', 'Housing', 'Fiscal']
 
@@ -37,17 +37,14 @@ const pricesData = [
   { period: '2024Q3', value: 2.5 }, { period: '2024Q4', value: 2.3 },
 ]
 
-const housePriceData = [
-  { period: '2020', value: 100 }, { period: '2021', value: 108 },
-  { period: '2022', value: 120 }, { period: '2023', value: 128 },
-  { period: '2024', value: 135 }, { period: '2025', value: 143 },
-]
-
 const fiscalData = [
   { period: '2020', value: -5.1 }, { period: '2021', value: -3.8 },
   { period: '2022', value: -1.5 }, { period: '2023', value: 0.2 },
   { period: '2024', value: 0.8 }, { period: '2025', value: 1.2 },
 ]
+
+const smallDot = (color) => ({ r: 3, fill: color })
+const normalDot = (color) => ({ r: 4, fill: color })
 
 const tabContent = {
   Macro: {
@@ -89,7 +86,7 @@ const tabContent = {
       { title: 'House Price Index', value: '143.0', subtitle: 'Base 2020 = 100', icon: Home, color: 'violet' },
       { title: 'Annual Change', value: '+6.2%', subtitle: 'Feb 2026', icon: Home, color: 'cyan' },
     ],
-    chart: { title: 'House Price Index (2020=100)', data: housePriceData, color: CHART_COLORS[4] },
+    chart: { title: 'House Price Index (2020=100)', data: HOUSE_PRICE_INDEX_DATA, color: CHART_COLORS[4] },
   },
   Fiscal: {
     kpis: [
@@ -105,21 +102,18 @@ export default function IrishEconomy() {
   const content = tabContent[activeTab]
 
   return (
-    <motion.div
-      className="p-8 space-y-8 overflow-y-auto h-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <PageWrapper title="Economic Overview">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Irish Economic Overview</h1>
         <p className="text-slate-500 mt-1">Key indicators for the Irish economy</p>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap" role="tablist">
         {tabs.map((tab) => (
           <button
             key={tab}
+            role="tab"
+            aria-selected={activeTab === tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab
@@ -140,9 +134,9 @@ export default function IrishEconomy() {
 
       <ChartCard title={content.chart.title}>
         <LineChart data={content.chart.data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+          <XAxis dataKey="period" tick={CHART_AXIS_TICK} stroke={CHART_AXIS_STROKE} />
+          <YAxis tick={CHART_AXIS_TICK} stroke={CHART_AXIS_STROKE} />
           <Tooltip />
           {content.chart.multiLine ? (
             <>
@@ -155,7 +149,7 @@ export default function IrishEconomy() {
                   name={line.label}
                   stroke={line.color}
                   strokeWidth={2}
-                  dot={{ r: 3, fill: line.color }}
+                  dot={smallDot(line.color)}
                 />
               ))}
             </>
@@ -165,11 +159,11 @@ export default function IrishEconomy() {
               dataKey="value"
               stroke={content.chart.color}
               strokeWidth={2}
-              dot={{ r: 4, fill: content.chart.color }}
+              dot={normalDot(content.chart.color)}
             />
           )}
         </LineChart>
       </ChartCard>
-    </motion.div>
+    </PageWrapper>
   )
 }

@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { TrendingUp, Users, DollarSign, BarChart3, UserX, Activity } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
-import { CHART_COLORS } from '@/lib/constants'
+import { PageWrapper } from '@/components/PageWrapper'
+import { CHART_COLORS, CHART_AXIS_TICK, CHART_AXIS_STROKE, CHART_GRID_STROKE } from '@/lib/constants'
 
 const gdpData = [
   { period: '2024Q1', value: 1.8 },
@@ -69,14 +69,11 @@ const charts = [
   { title: 'Inflation Rate (%)', data: inflationData, color: CHART_COLORS[5] },
 ]
 
+const dotStyle = (color) => ({ r: 4, fill: color })
+
 export default function Dashboard() {
   return (
-    <motion.div
-      className="p-8 space-y-8 overflow-y-auto h-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <PageWrapper title="Dashboard">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
         <p className="text-slate-500 mt-1">{format(new Date(), 'EEEE, d MMMM yyyy')}</p>
@@ -97,22 +94,22 @@ export default function Dashboard() {
           {charts.map((chart) => (
             <ChartCard key={chart.title} title={chart.title}>
               <LineChart data={chart.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                <XAxis dataKey="period" tick={CHART_AXIS_TICK} stroke={CHART_AXIS_STROKE} />
+                <YAxis tick={CHART_AXIS_TICK} stroke={CHART_AXIS_STROKE} />
                 <Tooltip />
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke={chart.color}
                   strokeWidth={2}
-                  dot={{ r: 4, fill: chart.color }}
+                  dot={dotStyle(chart.color)}
                 />
               </LineChart>
             </ChartCard>
           ))}
         </div>
       </div>
-    </motion.div>
+    </PageWrapper>
   )
 }

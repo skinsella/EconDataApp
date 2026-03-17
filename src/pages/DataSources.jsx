@@ -1,23 +1,22 @@
-import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { DataSourceCard } from '@/components/DataSourceCard'
+import { PageWrapper } from '@/components/PageWrapper'
 import { DATA_SOURCES } from '@/lib/constants'
 
-const sourcesWithStatus = DATA_SOURCES.map((s) => ({ ...s, status: 'ok' }))
-
-const activeCount = sourcesWithStatus.filter((s) => s.status === 'ok').length
-const degradedCount = sourcesWithStatus.filter((s) => s.status === 'degraded').length
-const downCount = sourcesWithStatus.filter((s) => s.status === 'down').length
-
 export default function DataSources() {
+  const sourcesWithStatus = useMemo(
+    () => DATA_SOURCES.map((s) => ({ ...s, status: 'ok' })),
+    []
+  )
+
+  const activeCount = sourcesWithStatus.filter((s) => s.status === 'ok').length
+  const degradedCount = sourcesWithStatus.filter((s) => s.status === 'degraded').length
+  const downCount = sourcesWithStatus.filter((s) => s.status === 'down').length
+
   return (
-    <motion.div
-      className="p-8 space-y-8 overflow-y-auto h-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <PageWrapper title="Data Sources">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Data Sources</h1>
         <p className="text-slate-500 mt-1">Status of connected economic data providers</p>
@@ -58,6 +57,6 @@ export default function DataSources() {
           <DataSourceCard key={source.provider} source={source} />
         ))}
       </div>
-    </motion.div>
+    </PageWrapper>
   )
 }

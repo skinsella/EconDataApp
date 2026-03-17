@@ -176,6 +176,21 @@ export const HOUSING_REPORTS = [
   },
 ]
 
+// Shared house price index data
+export const HOUSE_PRICE_INDEX_DATA = [
+  { period: '2020', value: 100 },
+  { period: '2021', value: 108 },
+  { period: '2022', value: 121 },
+  { period: '2023', value: 128 },
+  { period: '2024', value: 136 },
+  { period: '2025', value: 143 },
+]
+
+// Reusable chart styling constants (avoid inline object allocation on every render)
+export const CHART_AXIS_TICK = { fontSize: 12 }
+export const CHART_AXIS_STROKE = '#94a3b8'
+export const CHART_GRID_STROKE = '#e2e8f0'
+
 // Data sources for status page
 export const DATA_SOURCES = [
   { name: 'Central Statistics Office', provider: 'cso', endpoint: API_URLS.CSO, frequency: 'monthly' },

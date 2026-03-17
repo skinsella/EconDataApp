@@ -7,7 +7,9 @@ export function cn(...inputs) {
 
 export function formatNumber(value, decimals = 1) {
   if (value === null || value === undefined) return 'N/A'
-  return Number(value).toLocaleString('en-IE', {
+  const num = Number(value)
+  if (Number.isNaN(num)) return 'N/A'
+  return num.toLocaleString('en-IE', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })
@@ -20,6 +22,8 @@ export function formatPercent(value, decimals = 1) {
 
 export function formatCurrency(value, currency = 'EUR') {
   if (value === null || value === undefined) return 'N/A'
+  const num = Number(value)
+  if (Number.isNaN(num)) return 'N/A'
   return new Intl.NumberFormat('en-IE', {
     style: 'currency',
     currency,

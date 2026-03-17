@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { ReportCard } from '@/components/ReportCard'
+import { PageWrapper } from '@/components/PageWrapper'
 import { LATEST_REPORTS } from '@/lib/constants'
 
 const filters = ['All', 'cso', 'cbi', 'dof', 'oecd']
@@ -15,21 +15,17 @@ export default function LatestReports() {
       : LATEST_REPORTS.filter((r) => r.source === activeFilter)
 
   return (
-    <motion.div
-      className="p-8 space-y-8 overflow-y-auto h-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <PageWrapper title="Latest Reports">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Latest Reports</h1>
         <p className="text-slate-500 mt-1">Recent economic publications and analysis</p>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Filter reports by source">
         {filters.map((f) => (
           <button
             key={f}
+            aria-pressed={activeFilter === f}
             onClick={() => setActiveFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeFilter === f
@@ -50,6 +46,6 @@ export default function LatestReports() {
           <ReportCard key={report.title} report={report} />
         ))}
       </div>
-    </motion.div>
+    </PageWrapper>
   )
 }
