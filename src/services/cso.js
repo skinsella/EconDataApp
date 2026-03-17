@@ -3,6 +3,21 @@ import { fetchWithCache } from './api'
 const BASE_URL = 'https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset'
 
 /**
+ * Unwrap a JSON-stat 2.0 response.
+ * Some CSO datasets return the dataset directly at top level (class: "dataset"),
+ * while others nest it under a key like the dataset ID.
+ */
+function unwrapDataset(raw) {
+  // If it has dimension/id/value directly, it IS the dataset
+  if (raw.id && raw.dimension && raw.value) return raw
+  // Otherwise look for a nested dataset object
+  const datasetKey = Object.keys(raw).find(
+    (k) => k !== 'version' && k !== 'class' && typeof raw[k] === 'object' && raw[k]?.id
+  )
+  return datasetKey ? raw[datasetKey] : raw
+}
+
+/**
  * Fetch and transform CSO PxStat data in JSON-stat 2.0 format.
  * Returns an array of { period, value, label } objects.
  */
@@ -10,9 +25,7 @@ export async function fetchCSOData(datasetId) {
   const url = `${BASE_URL}/${datasetId}/JSON-stat/2.0/en`
   const raw = await fetchWithCache(url)
 
-  // JSON-stat 2.0: the response key is the dataset ID
-  const datasetKey = Object.keys(raw).find((k) => k !== 'version' && k !== 'class') || Object.keys(raw)[0]
-  const dataset = raw[datasetKey] || raw
+  const dataset = unwrapDataset(raw)
 
   const { dimension, id: dimIds, size, value: values } = dataset
 
@@ -92,8 +105,8 @@ export async function fetchCSOSeries(datasetId, filters = {}) {
   const url = `${BASE_URL}/${datasetId}/JSON-stat/2.0/en`
   const raw = await fetchWithCache(url)
 
-  const datasetKey = Object.keys(raw).find((k) => k !== 'version' && k !== 'class') || Object.keys(raw)[0]
-  const dataset = raw[datasetKey] || raw
+  // JSON-stat 2.0: dataset may be at top level (class: "dataset") or nested under a key
+  const dataset = unwrapDataset(raw)
 
   const { dimension, id: dimIds, size, value: values } = dataset
 

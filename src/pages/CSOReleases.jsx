@@ -38,9 +38,11 @@ function categorise(theme) {
 // Parse the CSO JSON format into our release objects
 // Actual CSO fields: releasedate (DD/MM/YYYY), orderdate (ISO), title, sector, subsector, refperiod, status
 function parseCSOReleases(json) {
-  if (!Array.isArray(json)) return []
+  // JSON is { releases: [...] } not a plain array
+  const items = Array.isArray(json) ? json : json?.releases || []
+  if (!items.length) return []
 
-  return json
+  return items
     .map((item) => {
       const title = item.title || ''
       // orderdate is ISO format "2026-03-18T00:00:00" — most reliable
