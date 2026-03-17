@@ -36,21 +36,31 @@ function categorise(theme) {
 }
 
 // Parse the CSO JSON format into our release objects
+// Actual CSO fields: releasedate (DD/MM/YYYY), orderdate (ISO), title, sector, subsector, refperiod, status
 function parseCSOReleases(json) {
-  // The CSO JSON is an array of objects with fields like:
-  // { "Date": "2026-03-18", "Title": "...", "Theme": "Economy/Prices", ... }
-  // Field names may vary — try common patterns
   if (!Array.isArray(json)) return []
 
   return json
     .map((item) => {
-      const date = item.Date || item.date || item.ReleaseDate || item.releaseDate || ''
-      const title = item.Title || item.title || item.ReleaseName || item.releaseName || item.Name || item.name || ''
-      const theme = item.Theme || item.theme || item.Category || item.category || ''
-      if (!date || !title) return null
-      // Normalise date to YYYY-MM-DD
-      const dateStr = date.substring(0, 10)
-      return { date: dateStr, title, theme }
+      const title = item.title || ''
+      // orderdate is ISO format "2026-03-18T00:00:00" — most reliable
+      // releasedate is DD/MM/YYYY format
+      let dateStr = ''
+      if (item.orderdate) {
+        dateStr = item.orderdate.substring(0, 10)
+      } else if (item.releasedate) {
+        // Convert DD/MM/YYYY to YYYY-MM-DD
+        const parts = item.releasedate.split('/')
+        if (parts.length === 3) dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`
+      }
+      if (!dateStr || !title) return null
+
+      const theme = item.sector && item.subsector
+        ? `${item.sector}/${item.subsector}`
+        : item.sector || ''
+      const refperiod = item.refperiod || ''
+
+      return { date: dateStr, title, theme, refperiod }
     })
     .filter(Boolean)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -266,7 +276,7 @@ export default function CSOReleases() {
 }
 
 function ReleaseRow({ release }) {
-  const { date, title, theme } = release
+  const { date, title, theme, refperiod } = release
   const d = parseISO(date)
   const todayRelease = isToday(d)
   const { label, color } = categorise(theme)
@@ -280,6 +290,9 @@ function ReleaseRow({ release }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-slate-900">{title}</p>
+          {refperiod && (
+            <p className="text-xs text-slate-500 mt-0.5">{refperiod}</p>
+          )}
           {todayRelease && (
             <p className="text-xs text-sky-600 font-medium mt-0.5">Releasing today</p>
           )}
