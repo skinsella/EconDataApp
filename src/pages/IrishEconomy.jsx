@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { TrendingUp, Users, UserX, DollarSign, Home, Landmark, Info } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from 'recharts'
+import { TrendingUp, Users, UserX, DollarSign, Home, Landmark, Info, Banknote, ArrowUpDown, Building2, Wallet, Plane } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,9 +13,19 @@ import {
   fetchHICPInflation,
   fetchHousePriceIndex,
   fetchFiscalAsPercentGNI,
+  fetchBondYields,
+  fetchEuroAreaRates,
+  fetchDebtServiceCosts,
+  fetchDebtServiceAbsolute,
+  fetchCurrentAccount,
+  fetchDwellingCompletions,
+  fetchEarnings,
+  fetchMigration,
+  fetchImmigration,
+  fetchEmigration,
 } from '@/services/indicators'
 
-const tabs = ['Macro', 'Employment', 'Prices', 'Housing', 'Fiscal']
+const tabs = ['Macro', 'Employment', 'Prices', 'Housing', 'Fiscal', 'Rates']
 
 export default function IrishEconomy() {
   const [activeTab, setActiveTab] = useState('Macro')
@@ -27,17 +37,27 @@ export default function IrishEconomy() {
     let cancelled = false
 
     async function loadAll() {
-      const standardFetchers = {
+      const fetchers = {
         gdp: fetchGDPGrowth,
         unemployment: fetchUnemploymentRate,
         youthUnemployment: fetchYouthUnemployment,
         hicp: fetchHICPInflation,
         housePrices: fetchHousePriceIndex,
+        bondYields: fetchBondYields,
+        euroAreaRates: fetchEuroAreaRates,
+        debtService: fetchDebtServiceCosts,
+        debtServiceAbs: fetchDebtServiceAbsolute,
+        currentAccount: fetchCurrentAccount,
+        dwellingCompletions: fetchDwellingCompletions,
+        earnings: fetchEarnings,
+        migration: fetchMigration,
+        immigration: fetchImmigration,
+        emigration: fetchEmigration,
       }
 
-      const stdKeys = Object.keys(standardFetchers)
+      const keys = Object.keys(fetchers)
       const [stdResults, fiscalResult] = await Promise.all([
-        Promise.allSettled(stdKeys.map((k) => standardFetchers[k]())),
+        Promise.allSettled(keys.map((k) => fetchers[k]())),
         fetchFiscalAsPercentGNI().catch((e) => ({ error: e.message })),
       ])
 
@@ -48,9 +68,9 @@ export default function IrishEconomy() {
 
       stdResults.forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value.length > 0) {
-          newData[stdKeys[i]] = result.value
+          newData[keys[i]] = result.value
         } else {
-          newErrors[stdKeys[i]] =
+          newErrors[keys[i]] =
             result.status === 'rejected'
               ? result.reason?.message || 'Unknown error'
               : 'No data available'
@@ -100,6 +120,8 @@ export default function IrishEconomy() {
         return <HousingTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
       case 'Fiscal':
         return <FiscalTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
+      case 'Rates':
+        return <RatesTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
       default:
         return null
     }
@@ -114,7 +136,7 @@ export default function IrishEconomy() {
     >
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Irish Economic Overview</h1>
-        <p className="text-slate-500 mt-1">Live data from Eurostat for Ireland</p>
+        <p className="text-slate-500 mt-1">Live data from Eurostat, CSO, and World Bank</p>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -186,6 +208,7 @@ function MacroTab({ errors, loading, latest, slice }) {
           <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <Tooltip />
+          <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
           <Line type="monotone" dataKey="value" name="GDP Growth" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ChartCard>
@@ -196,6 +219,8 @@ function MacroTab({ errors, loading, latest, slice }) {
 function EmploymentTab({ errors, loading, latest, slice, data }) {
   const unemp = latest('unemployment')
   const youth = latest('youthUnemployment')
+  const earn = latest('earnings')
+  const mig = latest('migration')
 
   // Merge unemployment and youth data by period for dual-line chart
   const merged = (() => {
@@ -213,9 +238,29 @@ function EmploymentTab({ errors, loading, latest, slice, data }) {
       .slice(-24)
   })()
 
+  // Merge migration flows
+  const migrationMerged = (() => {
+    const net = data.migration || []
+    const imm = data.immigration || []
+    const emi = data.emigration || []
+    const map = new Map()
+    net.forEach((d) => map.set(d.period, { period: d.period, net: d.value }))
+    imm.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.immigration = d.value
+      map.set(d.period, existing)
+    })
+    emi.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.emigration = d.value
+      map.set(d.period, existing)
+    })
+    return Array.from(map.values()).sort((a, b) => (a.period < b.period ? -1 : 1))
+  })()
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Unemployment Rate"
           value={unemp ? `${unemp.value}%` : '\u2014'}
@@ -230,6 +275,22 @@ function EmploymentTab({ errors, loading, latest, slice, data }) {
           subtitle={youth ? `${youth.period} \u00b7 Eurostat` : 'Loading\u2026'}
           icon={UserX}
           color="rose"
+          loading={loading}
+        />
+        <KpiCard
+          title="Avg Weekly Earnings"
+          value={earn ? `\u20ac${earn.value}` : '\u2014'}
+          subtitle={earn ? `${earn.period} \u00b7 CSO` : errors.earnings ? 'Unavailable' : 'Loading\u2026'}
+          icon={Wallet}
+          color="emerald"
+          loading={loading}
+        />
+        <KpiCard
+          title="Net Migration"
+          value={mig ? `${mig.value > 0 ? '+' : ''}${mig.value}k` : '\u2014'}
+          subtitle={mig ? `${mig.period} \u00b7 CSO (thousands)` : errors.migration ? 'Unavailable' : 'Loading\u2026'}
+          icon={Plane}
+          color="sky"
           loading={loading}
         />
       </div>
@@ -250,6 +311,42 @@ function EmploymentTab({ errors, loading, latest, slice, data }) {
           <Line type="monotone" dataKey="youth" name="Youth (< 25)" stroke={CHART_COLORS[4]} strokeWidth={2} dot={{ r: 2 }} />
         </LineChart>
       </ChartCard>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard
+          title="Average Weekly Earnings (\u20ac, quarterly, SA)"
+          subtitle="Source: CSO EHQ04"
+          loading={loading}
+          error={errors.earnings}
+        >
+          <LineChart data={slice('earnings')}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+            <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip formatter={(v) => `\u20ac${v}`} />
+            <Line type="monotone" dataKey="value" name="Avg Weekly Earnings" stroke={CHART_COLORS[3]} strokeWidth={2} dot={{ r: 2 }} />
+          </LineChart>
+        </ChartCard>
+
+        <ChartCard
+          title="Migration (thousands, annual)"
+          subtitle="Source: CSO PEA18"
+          loading={loading}
+          error={errors.migration && errors.immigration ? errors.migration : undefined}
+        >
+          <LineChart data={migrationMerged}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip />
+            <Legend />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="immigration" name="Immigration" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="emigration" name="Emigration" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="net" name="Net Migration" stroke={CHART_COLORS[0]} strokeWidth={2.5} dot={{ r: 3 }} />
+          </LineChart>
+        </ChartCard>
+      </div>
     </div>
   )
 }
@@ -281,6 +378,7 @@ function PricesTab({ errors, loading, latest, slice }) {
           <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <Tooltip />
+          <ReferenceLine y={2} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'ECB 2% target', position: 'right', fontSize: 10, fill: '#ef4444' }} />
           <Line type="monotone" dataKey="value" name="HICP" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 2 }} />
         </LineChart>
       </ChartCard>
@@ -290,6 +388,7 @@ function PricesTab({ errors, loading, latest, slice }) {
 
 function HousingTab({ errors, loading, latest, slice }) {
   const hpi = latest('housePrices')
+  const completions = latest('dwellingCompletions')
 
   return (
     <div className="space-y-6">
@@ -302,22 +401,47 @@ function HousingTab({ errors, loading, latest, slice }) {
           color="violet"
           loading={loading}
         />
+        <KpiCard
+          title="Dwelling Completions"
+          value={completions ? completions.value.toLocaleString() : '\u2014'}
+          subtitle={completions ? `${completions.period} \u00b7 CSO (SA, quarterly)` : errors.dwellingCompletions ? 'Unavailable' : 'Loading\u2026'}
+          icon={Building2}
+          color="orange"
+          loading={loading}
+        />
       </div>
 
-      <ChartCard
-        title="House Price Index (2015=100, quarterly)"
-        subtitle="Source: Eurostat prc_hpi_q"
-        loading={loading}
-        error={errors.housePrices}
-      >
-        <LineChart data={slice('housePrices')}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
-          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
-          <Tooltip />
-          <Line type="monotone" dataKey="value" name="HPI" stroke={CHART_COLORS[4]} strokeWidth={2} dot={{ r: 3 }} />
-        </LineChart>
-      </ChartCard>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard
+          title="House Price Index (2015=100, quarterly)"
+          subtitle="Source: Eurostat prc_hpi_q"
+          loading={loading}
+          error={errors.housePrices}
+        >
+          <LineChart data={slice('housePrices')}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+            <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip />
+            <Line type="monotone" dataKey="value" name="HPI" stroke={CHART_COLORS[4]} strokeWidth={2} dot={{ r: 3 }} />
+          </LineChart>
+        </ChartCard>
+
+        <ChartCard
+          title="New Dwelling Completions (quarterly, SA)"
+          subtitle="Source: CSO NDQ01"
+          loading={loading}
+          error={errors.dwellingCompletions}
+        >
+          <BarChart data={slice('dwellingCompletions')}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+            <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip />
+            <Bar dataKey="value" name="Completions" fill={CHART_COLORS[3]} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartCard>
+      </div>
     </div>
   )
 }
@@ -325,9 +449,12 @@ function HousingTab({ errors, loading, latest, slice }) {
 function FiscalTab({ errors, loading, latest, slice, data }) {
   const bal = latest('govBalance')
   const debt = latest('govDebt')
+  const interest = latest('debtService')
+  const interestAbs = latest('debtServiceAbs')
+  const ca = latest('currentAccount')
 
   // Merge balance and debt by period
-  const merged = (() => {
+  const fiscalMerged = (() => {
     const bData = data.govBalance || []
     const dData = data.govDebt || []
     const map = new Map()
@@ -340,9 +467,23 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
     return Array.from(map.values()).sort((a, b) => (a.period < b.period ? -1 : 1))
   })()
 
+  // Merge debt service (% GDP and absolute)
+  const debtServiceMerged = (() => {
+    const pctData = data.debtService || []
+    const absData = data.debtServiceAbs || []
+    const map = new Map()
+    pctData.forEach((d) => map.set(d.period, { period: d.period, pctGDP: d.value }))
+    absData.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.mioEUR = d.value
+      map.set(d.period, existing)
+    })
+    return Array.from(map.values()).sort((a, b) => (a.period < b.period ? -1 : 1))
+  })()
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Government Balance"
           value={bal ? `${bal.value > 0 ? '+' : ''}${bal.value}%` : '\u2014'}
@@ -359,14 +500,31 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
           color="slate"
           loading={loading}
         />
+        <KpiCard
+          title="Interest Payments"
+          value={interestAbs ? `\u20ac${(interestAbs.value / 1000).toFixed(1)}bn` : interest ? `${interest.value}% GDP` : '\u2014'}
+          subtitle={interest ? `${interest.period} \u00b7 Eurostat` : errors.debtService ? 'Unavailable' : 'Loading\u2026'}
+          icon={Banknote}
+          color="amber"
+          loading={loading}
+        />
+        <KpiCard
+          title="Current Account"
+          value={ca ? `\u20ac${(ca.value / 1000).toFixed(1)}bn` : '\u2014'}
+          subtitle={ca ? `${ca.period} \u00b7 Eurostat (quarterly)` : errors.currentAccount ? 'Unavailable' : 'Loading\u2026'}
+          icon={ArrowUpDown}
+          color="sky"
+          loading={loading}
+        />
       </div>
 
       <Card className="border-sky-200 bg-sky-50">
         <CardContent className="p-4 flex items-start gap-3">
           <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
           <p className="text-sm text-sky-800">
-            Fiscal ratios use GNI (Eurostat) as the denominator rather than GDP,
-            which is distorted by multinational activity in Ireland. For GNI*
+            Fiscal ratios use GNI as the denominator rather than GDP,
+            which is distorted by multinational activity in Ireland. Interest payments
+            use GDP as denominator (Eurostat convention). For GNI*
             (the CSO&apos;s further-adjusted measure), see the{' '}
             <a
               href="https://www.cso.ie/en/statistics/nationalaccounts/quarterlynationalaccounts/"
@@ -376,24 +534,143 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
             >
               CSO National Accounts
             </a>.
+            Current account figures for Ireland are heavily affected by IP-related flows.
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard
+          title="Government Balance & Debt (% of GNI, annual)"
+          subtitle="Source: Eurostat gov_10dd_edpt1 + World Bank GNI"
+          loading={loading}
+          error={errors.govBalance && errors.govDebt ? errors.govBalance : undefined}
+        >
+          <LineChart data={fiscalMerged}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip />
+            <Legend />
+            <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="balance" name="Balance (% GNI)" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="debt" name="Debt (% GNI)" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 3 }} />
+          </LineChart>
+        </ChartCard>
+
+        <ChartCard
+          title="Government Interest Expenditure (annual)"
+          subtitle="Source: Eurostat gov_10dd_edpt1 (D41PAY)"
+          loading={loading}
+          error={errors.debtService}
+        >
+          <BarChart data={debtServiceMerged}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip />
+            <Legend />
+            <Bar yAxisId="left" dataKey="mioEUR" name="\u20ac millions" fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} />
+            <Line yAxisId="right" type="monotone" dataKey="pctGDP" name="% of GDP" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
+          </BarChart>
+        </ChartCard>
+      </div>
+
+      <ChartCard
+        title="Current Account Balance (quarterly, \u20ac millions)"
+        subtitle="Source: Eurostat bop_c6_q"
+        loading={loading}
+        error={errors.currentAccount}
+      >
+        <BarChart data={slice('currentAccount')}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip formatter={(v) => `\u20ac${v.toLocaleString()}m`} />
+          <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+          <Bar dataKey="value" name="Current Account" fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ChartCard>
+    </div>
+  )
+}
+
+function RatesTab({ errors, loading, latest, slice, data }) {
+  const bondYield = latest('bondYields')
+  const euroRate = latest('euroAreaRates')
+
+  // Merge bond yields and euro area rates by period
+  const ratesMerged = (() => {
+    const bData = data.bondYields || []
+    const eData = data.euroAreaRates || []
+    const map = new Map()
+    bData.forEach((d) => map.set(d.period, { period: d.period, bondYield: d.value }))
+    eData.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.euroRate = d.value
+      map.set(d.period, existing)
+    })
+    return Array.from(map.values())
+      .sort((a, b) => (a.period < b.period ? -1 : 1))
+      .slice(-60)
+  })()
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KpiCard
+          title="10Y Bond Yield"
+          value={bondYield ? `${bondYield.value}%` : '\u2014'}
+          subtitle={bondYield ? `${bondYield.period} \u00b7 Eurostat` : errors.bondYields ? 'Unavailable' : 'Loading\u2026'}
+          icon={TrendingUp}
+          color="indigo"
+          loading={loading}
+        />
+        <KpiCard
+          title="Euro 3M Rate"
+          value={euroRate ? `${euroRate.value}%` : '\u2014'}
+          subtitle={euroRate ? `${euroRate.period} \u00b7 Eurostat (Euro Area)` : errors.euroAreaRates ? 'Unavailable' : 'Loading\u2026'}
+          icon={Banknote}
+          color="amber"
+          loading={loading}
+        />
+      </div>
+
+      <Card className="border-sky-200 bg-sky-50">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
+          <p className="text-sm text-sky-800">
+            The 10-year bond yield is the EMU convergence criterion rate for Ireland.
+            The 3-month rate tracks the Euro area money market rate, which closely follows
+            the ECB&apos;s main refinancing operations rate. Mortgage rates for Ireland are
+            published by the{' '}
+            <a
+              href="https://www.centralbank.ie/statistics/interest-rates-exchange-rates/interest-rates"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline"
+            >
+              Central Bank of Ireland
+            </a>.
           </p>
         </CardContent>
       </Card>
 
       <ChartCard
-        title="Government Balance & Debt (% of GNI, annual)"
-        subtitle="Source: Eurostat gov_10dd_edpt1 + nama_10_gdp"
+        title="Irish 10Y Bond Yield & Euro 3M Rate (%, monthly)"
+        subtitle="Source: Eurostat irt_lt_mcby_m, irt_st_m"
         loading={loading}
-        error={errors.govBalance && errors.govDebt ? errors.govBalance : undefined}
+        error={errors.bondYields && errors.euroAreaRates ? errors.bondYields : undefined}
       >
-        <LineChart data={merged}>
+        <LineChart data={ratesMerged}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="balance" name="Balance (% GNI)" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} />
-          <Line type="monotone" dataKey="debt" name="Debt (% GNI)" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="bondYield" name="IE 10Y Bond" stroke={CHART_COLORS[3]} strokeWidth={2} dot={{ r: 2 }} />
+          <Line type="monotone" dataKey="euroRate" name="Euro 3M Rate" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 2 }} />
         </LineChart>
       </ChartCard>
     </div>

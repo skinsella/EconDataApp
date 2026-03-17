@@ -56,7 +56,7 @@ export const CHART_COLORS = [
 
 // Countdown events
 export const COUNTDOWN_EVENTS = [
-  { title: 'Local & European Elections', targetDate: '2027-11-01' },
+  { title: 'Office Changeover', targetDate: '2027-11-17' },
   { title: 'General Election', targetDate: '2029-11-17' },
   { title: 'Budget 2027', targetDate: '2026-10-13' },
   { title: 'ECB Next Meeting', targetDate: '2026-04-17' },

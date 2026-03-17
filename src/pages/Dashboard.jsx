@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
-import { TrendingUp, Users, UserX, DollarSign, Home, Landmark } from 'lucide-react'
+import { TrendingUp, Users, UserX, DollarSign, Home, Landmark, Banknote, Building2 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
@@ -13,6 +13,8 @@ import {
   fetchHICPInflation,
   fetchHousePriceIndex,
   fetchFiscalAsPercentGNI,
+  fetchBondYields,
+  fetchDwellingCompletions,
 } from '@/services/indicators'
 
 const INDICATORS = [
@@ -22,6 +24,8 @@ const INDICATORS = [
   { key: 'hicp', label: 'Inflation (HICP)', unit: '%', icon: DollarSign, color: 'violet', chartTitle: 'HICP Inflation (% annual)', source: 'Eurostat' },
   { key: 'housePrices', label: 'House Price Idx', unit: '', icon: Home, color: 'emerald', chartTitle: 'House Price Index (2015=100)', source: 'Eurostat' },
   { key: 'govDebtGNI', label: 'Gov. Debt', unit: '% GNI', icon: Landmark, color: 'green', chartTitle: 'Government Debt (% GNI)', source: 'Eurostat' },
+  { key: 'bondYields', label: '10Y Bond', unit: '%', icon: Banknote, color: 'indigo', chartTitle: 'Irish 10Y Bond Yield (%)', source: 'Eurostat' },
+  { key: 'dwellingCompletions', label: 'Completions', unit: '', icon: Building2, color: 'orange', chartTitle: 'Dwelling Completions (SA, quarterly)', source: 'CSO' },
 ]
 
 export default function Dashboard() {
@@ -40,6 +44,8 @@ export default function Dashboard() {
         fetchHICPInflation(),
         fetchHousePriceIndex(),
         fetchFiscalAsPercentGNI(),
+        fetchBondYields(),
+        fetchDwellingCompletions(),
       ]
 
       const results = await Promise.allSettled(fetchers)
@@ -50,7 +56,7 @@ export default function Dashboard() {
       const newErrors = {}
       const keys = ['gdp', 'unemployment', 'youthUnemployment', 'hicp', 'housePrices']
 
-      // Standard indicators
+      // Standard indicators (first 5)
       results.slice(0, 5).forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value.length > 0) {
           newData[keys[i]] = result.value
@@ -61,13 +67,33 @@ export default function Dashboard() {
         }
       })
 
-      // Fiscal (% GNI)
+      // Fiscal (% GNI) - index 5
       const fiscal = results[5]
       if (fiscal.status === 'fulfilled') {
         if (fiscal.value.debtPctGNI?.length > 0) newData.govDebtGNI = fiscal.value.debtPctGNI
         else newErrors.govDebtGNI = 'No data available'
       } else {
         newErrors.govDebtGNI = `Failed to load: ${fiscal.reason?.message || 'Unknown error'}`
+      }
+
+      // Bond yields - index 6
+      const bonds = results[6]
+      if (bonds.status === 'fulfilled' && bonds.value.length > 0) {
+        newData.bondYields = bonds.value
+      } else {
+        newErrors.bondYields = bonds.status === 'rejected'
+          ? `Failed to load: ${bonds.reason?.message || 'Unknown error'}`
+          : 'No data available'
+      }
+
+      // Dwelling completions - index 7
+      const completions = results[7]
+      if (completions.status === 'fulfilled' && completions.value.length > 0) {
+        newData.dwellingCompletions = completions.value
+      } else {
+        newErrors.dwellingCompletions = completions.status === 'rejected'
+          ? `Failed to load: ${completions.reason?.message || 'Unknown error'}`
+          : 'No data available'
       }
 
       setData(newData)
@@ -104,7 +130,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
         {INDICATORS.map((ind) => {
           const val = latest(ind.key)
           return (
@@ -153,9 +179,9 @@ export default function Dashboard() {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke={CHART_COLORS[i]}
+                    stroke={CHART_COLORS[i % CHART_COLORS.length]}
                     strokeWidth={2}
-                    dot={{ r: 3, fill: CHART_COLORS[i] }}
+                    dot={{ r: 3, fill: CHART_COLORS[i % CHART_COLORS.length] }}
                   />
                 </LineChart>
               </ChartCard>
@@ -165,7 +191,7 @@ export default function Dashboard() {
       </div>
 
       <p className="text-xs text-slate-400 text-center">
-        All data sourced live from Eurostat. Fiscal ratios use GNI as denominator. Last refresh: {format(new Date(), 'd MMM yyyy HH:mm')}.
+        Data sourced live from Eurostat, CSO, and World Bank. Fiscal ratios use GNI as denominator. Last refresh: {format(new Date(), 'd MMM yyyy HH:mm')}.
       </p>
     </motion.div>
   )
