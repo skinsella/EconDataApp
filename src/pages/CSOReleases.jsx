@@ -1,85 +1,145 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, ExternalLink, Loader2, AlertCircle } from 'lucide-react'
+import { ExternalLink, AlertCircle, Loader2, Filter } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { format, parseISO, isPast, isToday } from 'date-fns'
+import { format, parseISO, isBefore, isToday, startOfDay, addMonths } from 'date-fns'
 
-const CSO_RELEASES_URL = 'https://www.cso.ie/en/csolatestreleases/'
+const CSO_CALENDAR_JSON = 'https://cdn.cso.ie/static/data/ReleaseCalendar.json'
+const CSO_CALENDAR_PAGE = 'https://www.cso.ie/en/csolatestnews/releasecalendar/'
 
-// Category colours
-const CATEGORY_COLORS = {
-  'Prices': 'bg-rose-100 text-rose-700',
-  'Labour Market': 'bg-amber-100 text-amber-700',
-  'Economy': 'bg-sky-100 text-sky-700',
-  'Agriculture': 'bg-emerald-100 text-emerald-700',
-  'Industry': 'bg-indigo-100 text-indigo-700',
-  'Construction': 'bg-orange-100 text-orange-700',
-  'Social Conditions': 'bg-violet-100 text-violet-700',
-  'Transport': 'bg-cyan-100 text-cyan-700',
-  'Services': 'bg-blue-100 text-blue-700',
+// Map CSO themes to short display categories and colours
+const THEME_MAP = {
+  'Economy/Prices': { label: 'Prices', color: 'bg-rose-100 text-rose-700' },
+  'Economy/External Trade': { label: 'Trade', color: 'bg-blue-100 text-blue-700' },
+  'Economy/Government Accounts': { label: 'Economy', color: 'bg-sky-100 text-sky-700' },
+  'Labour Market and Earnings': { label: 'Labour Market', color: 'bg-amber-100 text-amber-700' },
+  'Business/Agriculture and Fishing': { label: 'Agriculture', color: 'bg-emerald-100 text-emerald-700' },
+  'Business/Transport': { label: 'Transport', color: 'bg-cyan-100 text-cyan-700' },
+  'Business/Tourism and Travel': { label: 'Tourism', color: 'bg-teal-100 text-teal-700' },
+  'Business/Multisectoral': { label: 'Business', color: 'bg-indigo-100 text-indigo-700' },
+  'People and Society/Housing': { label: 'Housing', color: 'bg-orange-100 text-orange-700' },
+  'People and Society/Social Conditions': { label: 'Social', color: 'bg-violet-100 text-violet-700' },
+  'People and Society/Births, Deaths and Marriages': { label: 'Vital Stats', color: 'bg-pink-100 text-pink-700' },
+  'People and Society/Crime and Justice': { label: 'Crime', color: 'bg-red-100 text-red-700' },
 }
 
-// Latest known CSO release calendar — sourced from cso.ie/en/csolatestreleases/
-// Last verified: 17 March 2026
-const KNOWN_RELEASES = [
-  { date: '2026-03-02', title: 'Flash Estimate for the Harmonised Index of Consumer Prices February 2026', category: 'Prices' },
-  { date: '2026-03-04', title: 'Monthly Unemployment February 2026', category: 'Labour Market' },
-  { date: '2026-03-05', title: 'Milk Statistics January 2026', category: 'Agriculture' },
-  { date: '2026-03-05', title: 'Quarterly National Accounts and International Accounts Q4 2025', category: 'Economy' },
-  { date: '2026-03-06', title: 'Live Register February 2026', category: 'Labour Market' },
-  { date: '2026-03-06', title: 'Women in the Labour Market 2024-2025', category: 'Labour Market' },
-  { date: '2026-03-09', title: 'Industrial Production and Turnover January 2026', category: 'Industry' },
-  { date: '2026-03-09', title: 'Output, Input and Income in Agriculture - Preliminary Estimate 2025', category: 'Agriculture' },
-  { date: '2026-03-10', title: 'Capital Acquisitions and Capital Sales PxStat Tables', category: 'Economy' },
-  { date: '2026-03-10', title: 'Industrial Stocks PxStat Tables', category: 'Industry' },
-  { date: '2026-03-11', title: 'Survey on Income and Living Conditions (SILC) 2025', category: 'Social Conditions' },
-  { date: '2026-03-11', title: 'Vehicles Licensed for the First Time February 2026', category: 'Transport' },
-  { date: '2026-03-12', title: 'Agricultural Price Indices January 2026', category: 'Agriculture' },
-  { date: '2026-03-12', title: 'Consumer Price Index February 2026', category: 'Prices' },
-  { date: '2026-03-12', title: 'Planning Permissions Q4 and Year 2025', category: 'Construction' },
-  { date: '2026-03-13', title: 'Monthly Services Index January 2026', category: 'Services' },
-  { date: '2026-03-13', title: 'Services Producer Price Index Q4 2025', category: 'Prices' },
-  { date: '2026-03-16', title: 'Household Saving Q4 2025', category: 'Economy' },
+function categorise(theme) {
+  if (!theme) return { label: 'Other', color: 'bg-slate-100 text-slate-700' }
+  // Exact match first
+  if (THEME_MAP[theme]) return THEME_MAP[theme]
+  // Partial match on first segment
+  for (const [key, val] of Object.entries(THEME_MAP)) {
+    if (theme.startsWith(key.split('/')[0])) return val
+  }
+  return { label: 'Other', color: 'bg-slate-100 text-slate-700' }
+}
+
+// Parse the CSO JSON format into our release objects
+function parseCSOReleases(json) {
+  // The CSO JSON is an array of objects with fields like:
+  // { "Date": "2026-03-18", "Title": "...", "Theme": "Economy/Prices", ... }
+  // Field names may vary — try common patterns
+  if (!Array.isArray(json)) return []
+
+  return json
+    .map((item) => {
+      const date = item.Date || item.date || item.ReleaseDate || item.releaseDate || ''
+      const title = item.Title || item.title || item.ReleaseName || item.releaseName || item.Name || item.name || ''
+      const theme = item.Theme || item.theme || item.Category || item.category || ''
+      if (!date || !title) return null
+      // Normalise date to YYYY-MM-DD
+      const dateStr = date.substring(0, 10)
+      return { date: dateStr, title, theme }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+const RANGE_OPTIONS = [
+  { key: '2w', label: '2 Weeks' },
+  { key: '1m', label: '1 Month' },
+  { key: '3m', label: '3 Months' },
+  { key: 'all', label: 'All Upcoming' },
 ]
 
 export default function CSOReleases() {
-  const [releases, setReleases] = useState(KNOWN_RELEASES)
-  const [liveLoaded, setLiveLoaded] = useState(false)
-  const [liveError, setLiveError] = useState(false)
+  const [releases, setReleases] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [range, setRange] = useState('3m')
+  const [catFilter, setCatFilter] = useState('All')
 
-  // Attempt to fetch live data from CSO (may fail due to CORS)
   useEffect(() => {
     let cancelled = false
 
-    async function tryLiveFetch() {
+    async function fetchCalendar() {
       try {
-        const res = await fetch(CSO_RELEASES_URL, { signal: AbortSignal.timeout(8000) })
+        const res = await fetch(CSO_CALENDAR_JSON, { signal: AbortSignal.timeout(10000) })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const html = await res.text()
-
-        // Try to parse release entries from HTML
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(html, 'text/html')
-        const rows = doc.querySelectorAll('table tbody tr, .release-item, li')
-
-        // If we parsed something meaningful, update releases
-        // (This is best-effort — CSO page structure may vary)
-        if (rows.length > 5 && !cancelled) {
-          setLiveLoaded(true)
+        const json = await res.json()
+        if (cancelled) return
+        const parsed = parseCSOReleases(json)
+        if (parsed.length > 0) {
+          setReleases(parsed)
+        } else {
+          setError('Could not parse release calendar data.')
         }
-      } catch {
-        if (!cancelled) setLiveError(true)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || 'Failed to fetch release calendar')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
 
-    tryLiveFetch()
+    fetchCalendar()
     return () => { cancelled = true }
   }, [])
 
-  // Separate upcoming and past releases
-  const upcoming = releases.filter((r) => !isPast(parseISO(r.date)) || isToday(parseISO(r.date)))
-  const past = releases.filter((r) => isPast(parseISO(r.date)) && !isToday(parseISO(r.date)))
+  // Filter to upcoming only (today or later)
+  const today = startOfDay(new Date())
+
+  const upcomingReleases = useMemo(() => {
+    return releases.filter((r) => {
+      const d = parseISO(r.date)
+      return !isBefore(d, today) || isToday(d)
+    })
+  }, [releases])
+
+  // Apply range filter
+  const rangeFiltered = useMemo(() => {
+    if (range === 'all') return upcomingReleases
+    const months = range === '2w' ? 0.5 : range === '1m' ? 1 : 3
+    const cutoff = range === '2w'
+      ? new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000)
+      : addMonths(today, months)
+    return upcomingReleases.filter((r) => isBefore(parseISO(r.date), cutoff))
+  }, [upcomingReleases, range])
+
+  // Get unique categories for filter buttons
+  const categories = useMemo(() => {
+    const cats = new Set(rangeFiltered.map((r) => categorise(r.theme).label))
+    return ['All', ...Array.from(cats).sort()]
+  }, [rangeFiltered])
+
+  // Apply category filter
+  const displayed = useMemo(() => {
+    if (catFilter === 'All') return rangeFiltered
+    return rangeFiltered.filter((r) => categorise(r.theme).label === catFilter)
+  }, [rangeFiltered, catFilter])
+
+  // Group by month for display
+  const grouped = useMemo(() => {
+    const groups = {}
+    for (const r of displayed) {
+      const monthKey = r.date.substring(0, 7) // YYYY-MM
+      if (!groups[monthKey]) groups[monthKey] = []
+      groups[monthKey].push(r)
+    }
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+  }, [displayed])
 
   return (
     <motion.div
@@ -91,10 +151,10 @@ export default function CSOReleases() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">CSO Release Calendar</h1>
-          <p className="text-slate-500 mt-1">Upcoming and recent statistical releases from the CSO</p>
+          <p className="text-slate-500 mt-1">Upcoming statistical releases from the Central Statistics Office</p>
         </div>
         <a
-          href={CSO_RELEASES_URL}
+          href={CSO_CALENDAR_PAGE}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 shrink-0"
@@ -104,66 +164,127 @@ export default function CSOReleases() {
         </a>
       </div>
 
-      {liveError && (
+      {error && (
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="p-4 flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
             <p className="text-sm text-amber-800">
-              Could not fetch live data from CSO.ie (CORS restriction). Showing the last known
-              release calendar, verified on 17 March 2026. Visit{' '}
-              <a href={CSO_RELEASES_URL} target="_blank" rel="noopener noreferrer" className="font-medium underline">
-                CSO Latest Releases
+              Could not fetch live release calendar from CSO ({error}). Visit{' '}
+              <a href={CSO_CALENDAR_PAGE} target="_blank" rel="noopener noreferrer" className="font-medium underline">
+                CSO Release Calendar
               </a>{' '}
-              for the most current schedule.
+              for the latest schedule.
             </p>
           </CardContent>
         </Card>
       )}
 
-      {/* Upcoming releases */}
-      {upcoming.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Upcoming</h2>
-          <div className="space-y-3">
-            {upcoming.map((r, i) => (
-              <ReleaseRow key={`${r.date}-${i}`} release={r} highlight />
-            ))}
-          </div>
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          <span className="ml-2 text-slate-500">Loading release calendar…</span>
         </div>
       )}
 
-      {/* Past releases */}
-      {past.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Recently Published</h2>
-          <div className="space-y-3">
-            {past.reverse().map((r, i) => (
-              <ReleaseRow key={`${r.date}-${i}`} release={r} />
-            ))}
+      {!loading && !error && (
+        <>
+          {/* Range selector */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              {RANGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setRange(opt.key)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    range === opt.key
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+
+            {/* Category filters */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter className="h-4 w-4 text-slate-400" />
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCatFilter(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    catFilter === cat
+                      ? 'bg-slate-700 text-white'
+                      : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <span className="ml-auto text-sm text-slate-500">
+              {displayed.length} release{displayed.length !== 1 ? 's' : ''}
+            </span>
           </div>
-        </div>
+
+          {/* Grouped by month */}
+          {grouped.length === 0 && (
+            <p className="text-slate-500 text-center py-12">No upcoming releases match your filters.</p>
+          )}
+
+          {grouped.map(([monthKey, items]) => {
+            const monthDate = parseISO(`${monthKey}-01`)
+            return (
+              <div key={monthKey}>
+                <h2 className="text-lg font-semibold text-slate-900 mb-3">
+                  {format(monthDate, 'MMMM yyyy')}
+                </h2>
+                <div className="space-y-2">
+                  {items.map((r, i) => (
+                    <ReleaseRow key={`${r.date}-${i}`} release={r} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+
+          <p className="text-xs text-slate-400 text-center">
+            Data sourced live from{' '}
+            <a href={CSO_CALENDAR_JSON} target="_blank" rel="noopener noreferrer" className="underline">
+              CSO Release Calendar JSON
+            </a>
+            . Dates are subject to change by the CSO.
+          </p>
+        </>
       )}
     </motion.div>
   )
 }
 
-function ReleaseRow({ release, highlight }) {
-  const { date, title, category } = release
+function ReleaseRow({ release }) {
+  const { date, title, theme } = release
   const d = parseISO(date)
-  const past = isPast(d) && !isToday(d)
-  const catColor = CATEGORY_COLORS[category] || 'bg-slate-100 text-slate-700'
+  const todayRelease = isToday(d)
+  const { label, color } = categorise(theme)
 
   return (
-    <Card className={highlight ? 'border-sky-200' : ''}>
+    <Card className={todayRelease ? 'border-sky-300 bg-sky-50/50' : ''}>
       <CardContent className="p-4 flex items-center gap-4">
-        <div className={`text-center shrink-0 w-14 ${past ? 'text-slate-400' : 'text-slate-900'}`}>
-          <p className="text-xs font-medium uppercase">{format(d, 'MMM')}</p>
+        <div className="text-center shrink-0 w-14 text-slate-900">
+          <p className="text-xs font-medium uppercase">{format(d, 'EEE')}</p>
           <p className="text-2xl font-bold leading-tight">{format(d, 'd')}</p>
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${past ? 'text-slate-400' : 'text-slate-900'}`}>{title}</p>
+          <p className="text-sm font-medium text-slate-900">{title}</p>
+          {todayRelease && (
+            <p className="text-xs text-sky-600 font-medium mt-0.5">Releasing today</p>
+          )}
         </div>
-        <Badge className={`${catColor} shrink-0 text-xs`}>{category}</Badge>
+        <Badge className={`${color} shrink-0 text-xs`}>{label}</Badge>
       </CardContent>
     </Card>
   )
