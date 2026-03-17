@@ -45,8 +45,7 @@ export const SOURCE_COLORS = {
   wto: { bg: 'bg-blue-100', text: 'text-blue-800', chart: '#3b82f6' },
   imf: { bg: 'bg-amber-100', text: 'text-amber-800', chart: '#f59e0b' },
   eu_trade: { bg: 'bg-indigo-100', text: 'text-indigo-800', chart: '#6366f1' },
-  usitc: { bg: 'bg-red-100', text: 'text-red-800', chart: '#ef4444' },
-  mofcom: { bg: 'bg-orange-100', text: 'text-orange-800', chart: '#f97316' },
+  esri: { bg: 'bg-teal-100', text: 'text-teal-800', chart: '#14b8a6' },
 }
 
 // Chart color palette
@@ -67,121 +66,98 @@ export const COUNTDOWN_EVENTS = [
   { title: 'IMF World Economic Outlook', targetDate: '2026-10-01' },
 ]
 
-// Sample reports data
+// ──────────────────────────────────────────────────────────────────────
+// Reports — every URL is a real, verifiable publication landing page.
+// No fabricated titles, dates, or summary bullet points.
+// ──────────────────────────────────────────────────────────────────────
+
 export const LATEST_REPORTS = [
   {
-    title: 'Quarterly National Accounts Q4 2025',
+    title: 'CSO Quarterly National Accounts',
     source: 'cso',
-    url: 'https://www.cso.ie/en/releasesandpublications/ep/p-na/qna/',
-    published_date: '2026-03-13',
-    summary_points: [
-      'GDP grew by 2.1% in Q4 2025 compared to the previous quarter',
-      'Modified domestic demand increased by 1.8% year-on-year',
-    ],
-    category: 'statistics',
+    url: 'https://www.cso.ie/en/statistics/nationalaccounts/quarterlynationalaccounts/',
+    description: 'Quarterly GDP, GNP, GNI* and Modified Domestic Demand for Ireland.',
   },
   {
-    title: 'Quarterly Bulletin Q1 2026',
+    title: 'CSO Labour Force Survey',
+    source: 'cso',
+    url: 'https://www.cso.ie/en/statistics/labourmarket/labourforcesurvey/',
+    description: 'Employment, unemployment and labour force participation statistics.',
+  },
+  {
+    title: 'CSO Consumer Price Index',
+    source: 'cso',
+    url: 'https://www.cso.ie/en/statistics/prices/consumerpriceindex/',
+    description: 'Monthly CPI measuring the change in prices of consumer goods and services.',
+  },
+  {
+    title: 'Central Bank Quarterly Bulletin',
     source: 'cbi',
     url: 'https://www.centralbank.ie/publication/quarterly-bulletins',
-    published_date: '2026-03-10',
-    summary_points: [
-      'Irish economy continues to show resilience despite global headwinds',
-      'Inflation projected to moderate to 2.3% by year end',
-    ],
-    category: 'economic_outlook',
+    description: 'Economic analysis, forecasts and financial stability commentary from the CBI.',
   },
   {
-    title: 'Stability Programme Update',
+    title: 'Department of Finance Publications',
     source: 'dof',
     url: 'https://www.gov.ie/en/collection/budget/',
-    published_date: '2026-03-05',
-    summary_points: [
-      'Government projects surplus of 1.2% of GDP for 2026',
-      'Continued investment in housing and infrastructure planned',
-    ],
-    category: 'fiscal_policy',
+    description: 'Budget documents, Stability Programme Updates and fiscal publications.',
   },
   {
-    title: 'OECD Economic Survey of Ireland 2026',
+    title: 'OECD Economic Surveys: Ireland',
     source: 'oecd',
-    url: 'https://www.oecd.org/ireland/',
-    published_date: '2026-02-28',
-    summary_points: [
-      'Recommends broadening the tax base and reducing reliance on corporation tax',
-      'Highlights housing supply as a key challenge for growth',
-    ],
-    category: 'economic_outlook',
+    url: 'https://www.oecd.org/en/publications/oecd-economic-surveys-ireland_19990294.html',
+    description: 'Periodic assessment of the Irish economy with policy recommendations.',
   },
 ]
 
 export const TRADE_REPORTS = [
   {
-    title: 'World Trade Outlook Indicator',
+    title: 'WTO World Trade Statistical Review',
     source: 'wto',
-    url: 'https://www.wto.org/english/news_e/news_e.htm',
-    published_date: '2026-03-01',
-    summary_points: [
-      'Global goods trade volume grew 2.7% in 2025',
-      'Services trade continues post-pandemic recovery',
-    ],
-    category: 'global_trade',
+    url: 'https://www.wto.org/english/res_e/statis_e/wts_e.htm',
+    description: 'Annual overview of global merchandise and services trade developments.',
   },
   {
-    title: 'World Economic Outlook Update',
+    title: 'IMF World Economic Outlook',
     source: 'imf',
     url: 'https://www.imf.org/en/Publications/WEO',
-    published_date: '2026-01-20',
-    summary_points: [
-      'Global growth projected at 3.3% for 2026',
-      'Trade policy uncertainty remains elevated',
-    ],
-    category: 'economic_impact',
+    description: 'Biannual global growth projections, trade forecasts and risk assessment.',
   },
   {
-    title: 'EU Trade Policy Review',
+    title: 'EU Trade Policy',
     source: 'eu_trade',
     url: 'https://policy.trade.ec.europa.eu/',
-    published_date: '2026-02-15',
-    summary_points: [
-      'EU-Mercosur trade agreement implementation progressing',
-      'New trade defence measures under consideration',
-    ],
-    category: 'trade_policy',
+    description: 'European Commission trade agreements, statistics and policy updates.',
   },
 ]
 
 export const HOUSING_REPORTS = [
   {
-    title: 'Residential Property Price Index February 2026',
+    title: 'CSO Residential Property Price Index',
     source: 'cso',
-    url: 'https://www.cso.ie/en/releasesandpublications/ep/p-rppi/residentialpropertypriceindex/',
-    published_date: '2026-03-14',
-    summary_points: [
-      'National house prices increased by 6.2% year-on-year',
-      'Dublin prices up 5.8%, prices outside Dublin up 6.7%',
-    ],
-    category: 'statistics',
+    url: 'https://www.cso.ie/en/statistics/prices/residentialpropertypriceindex/',
+    description: 'Monthly national and regional house price indices for Ireland.',
   },
   {
-    title: 'Financial Stability Review 2026:I',
+    title: 'Central Bank Financial Stability Review',
     source: 'cbi',
     url: 'https://www.centralbank.ie/publication/financial-stability-review',
-    published_date: '2026-03-01',
-    summary_points: [
-      'Mortgage lending rules remain appropriate for current conditions',
-      'Commercial real estate risks are being closely monitored',
-    ],
-    category: 'research',
+    description: 'Assessment of risks to financial stability including mortgage and property markets.',
+  },
+  {
+    title: 'ESRI Housing Research',
+    source: 'esri',
+    url: 'https://www.esri.ie/research/housing',
+    description: 'Research publications on housing supply, affordability and policy from the ESRI.',
   },
 ]
 
 // Data sources for status page
 export const DATA_SOURCES = [
-  { name: 'Central Statistics Office', provider: 'cso', endpoint: API_URLS.CSO, frequency: 'monthly' },
-  { name: 'European Central Bank', provider: 'ecb', endpoint: API_URLS.ECB, frequency: 'daily' },
-  { name: 'Eurostat', provider: 'eurostat', endpoint: API_URLS.EUROSTAT, frequency: 'monthly' },
-  { name: 'OECD', provider: 'oecd', endpoint: API_URLS.OECD, frequency: 'quarterly' },
-  { name: 'World Bank', provider: 'worldbank', endpoint: API_URLS.WORLD_BANK, frequency: 'yearly' },
-  { name: 'Central Bank of Ireland', provider: 'cbi', endpoint: 'https://www.centralbank.ie', frequency: 'quarterly' },
+  { name: 'Eurostat', provider: 'eurostat', endpoint: API_URLS.EUROSTAT, frequency: 'monthly/quarterly', testPath: '/prc_hicp_manr?format=JSON&geo=IE&coicop=CP00&sinceTimePeriod=2025-01' },
+  { name: 'Central Statistics Office', provider: 'cso', endpoint: API_URLS.CSO, frequency: 'monthly', testPath: '/CPM01/JSON-stat/2.0/en' },
+  { name: 'European Central Bank', provider: 'ecb', endpoint: API_URLS.ECB, frequency: 'daily', testPath: '/EXR/M.USD.EUR.SP00.A?format=jsondata' },
+  { name: 'World Bank', provider: 'worldbank', endpoint: API_URLS.WORLD_BANK, frequency: 'yearly', testPath: '/country/IRL/indicator/NY.GDP.MKTP.CD?format=json&per_page=1&date=2023' },
+  { name: 'OECD', provider: 'oecd', endpoint: API_URLS.OECD, frequency: 'quarterly', testPath: '' },
+  { name: 'Central Bank of Ireland', provider: 'cbi', endpoint: 'https://www.centralbank.ie', frequency: 'quarterly', testPath: '' },
 ]

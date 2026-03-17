@@ -1,37 +1,6 @@
 import { motion } from 'framer-motion'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts'
-import { ThumbsUp, Minus, ThumbsDown, Info } from 'lucide-react'
-import { KpiCard } from '@/components/KpiCard'
-import { ChartCard } from '@/components/ChartCard'
+import { Info } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-
-const sentimentBarData = [
-  { name: 'Positive', value: 42 },
-  { name: 'Neutral', value: 38 },
-  { name: 'Negative', value: 20 },
-]
-
-const barColors = ['#10b981', '#64748b', '#ef4444']
-
-const headlines = [
-  { text: 'Irish GDP growth exceeds expectations in Q4 2025', sentiment: 'positive' },
-  { text: 'ECB holds interest rates steady at March meeting', sentiment: 'neutral' },
-  { text: 'Housing completions rise 12% year-on-year', sentiment: 'positive' },
-  { text: 'Consumer confidence index falls for second month', sentiment: 'negative' },
-  { text: 'FDI inflows remain robust despite global uncertainty', sentiment: 'positive' },
-  { text: 'Government announces new infrastructure spending package', sentiment: 'neutral' },
-  { text: 'Retail sales growth slows in February', sentiment: 'negative' },
-  { text: 'Tech sector employment continues to expand', sentiment: 'positive' },
-  { text: 'OECD revises Ireland growth forecast marginally lower', sentiment: 'neutral' },
-  { text: 'Cost of living pressures persist in urban areas', sentiment: 'negative' },
-]
-
-const sentimentBadge = {
-  positive: 'bg-emerald-100 text-emerald-700',
-  neutral: 'bg-slate-100 text-slate-700',
-  negative: 'bg-red-100 text-red-700',
-}
 
 export default function MediaSentiment() {
   return (
@@ -46,50 +15,71 @@ export default function MediaSentiment() {
         <p className="text-slate-500 mt-1">Sentiment analysis of Irish economic news coverage</p>
       </div>
 
-      <Card className="border-sky-200 bg-sky-50">
-        <CardContent className="p-4 flex items-start gap-3">
-          <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-sky-800">
-            This page shows automated sentiment analysis of recent Irish economic news headlines.
-            Sentiment is classified as positive, neutral, or negative based on natural language processing.
-          </p>
+      <Card className="border-amber-200 bg-amber-50">
+        <CardContent className="p-6 flex items-start gap-3">
+          <Info className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+          <div className="text-sm text-amber-800 space-y-2">
+            <p className="font-medium">This page is under development.</p>
+            <p>
+              Automated sentiment analysis requires a live news feed and NLP pipeline.
+              This feature is planned for a future release. In the meantime, you can
+              follow Irish economic news coverage from these sources:
+            </p>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard title="Positive" value="42%" subtitle="of headlines" icon={ThumbsUp} color="emerald" />
-        <KpiCard title="Neutral" value="38%" subtitle="of headlines" icon={Minus} color="slate" />
-        <KpiCard title="Negative" value="20%" subtitle="of headlines" icon={ThumbsDown} color="red" />
-      </div>
-
-      <ChartCard title="Sentiment Distribution" subtitle="Percentage of analysed headlines">
-        <BarChart data={sentimentBarData} layout="vertical">
-          <XAxis type="number" tick={{ fontSize: 12 }} stroke="#94a3b8" domain={[0, 100]} />
-          <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" width={70} />
-          <Tooltip formatter={(val) => `${val}%`} />
-          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-            {sentimentBarData.map((entry, index) => (
-              <Cell key={entry.name} fill={barColors[index]} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ChartCard>
-
-      <div>
-        <h2 className="text-xl font-semibold text-slate-900 mb-4">Recent Headlines</h2>
-        <div className="space-y-3">
-          {headlines.map((h, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 flex items-center justify-between gap-4">
-                <p className="text-sm text-slate-700">{h.text}</p>
-                <Badge className={`${sentimentBadge[h.sentiment]} shrink-0 capitalize`}>
-                  {h.sentiment}
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {NEWS_SOURCES.map((source) => (
+          <Card key={source.name}>
+            <CardContent className="p-5">
+              <h3 className="font-semibold text-slate-900">{source.name}</h3>
+              <p className="text-sm text-slate-500 mt-1">{source.description}</p>
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-3 text-sm font-medium text-sky-600 hover:text-sky-700"
+              >
+                Visit &rarr;
+              </a>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </motion.div>
   )
 }
+
+const NEWS_SOURCES = [
+  {
+    name: 'RTE Business',
+    url: 'https://www.rte.ie/news/business/',
+    description: 'Irish national broadcaster business and economy reporting.',
+  },
+  {
+    name: 'Irish Times Business',
+    url: 'https://www.irishtimes.com/business/',
+    description: 'Business news, economic analysis and market data.',
+  },
+  {
+    name: 'Business Post',
+    url: 'https://www.businesspost.ie/',
+    description: 'In-depth Irish business and economic journalism.',
+  },
+  {
+    name: 'Irish Examiner Business',
+    url: 'https://www.irishexaminer.com/business/',
+    description: 'Business reporting with a focus on regional and national economy.',
+  },
+  {
+    name: 'Central Bank Blog',
+    url: 'https://www.centralbank.ie/news/article/behind-the-data',
+    description: 'Behind the Data blog posts from CBI economists.',
+  },
+  {
+    name: 'ESRI Publications',
+    url: 'https://www.esri.ie/publications',
+    description: 'Economic and Social Research Institute research papers and commentary.',
+  },
+]

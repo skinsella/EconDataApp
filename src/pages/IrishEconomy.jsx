@@ -1,108 +1,98 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { TrendingUp, Users, UserX, DollarSign, Home, Landmark, Activity, BarChart3 } from 'lucide-react'
+import { TrendingUp, Users, UserX, DollarSign, Home, Landmark, Info } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
+import { Card, CardContent } from '@/components/ui/card'
 import { CHART_COLORS } from '@/lib/constants'
+import {
+  fetchGDPGrowth,
+  fetchUnemploymentRate,
+  fetchYouthUnemployment,
+  fetchHICPInflation,
+  fetchHousePriceIndex,
+  fetchGovBalance,
+  fetchGovDebt,
+} from '@/services/indicators'
 
 const tabs = ['Macro', 'Employment', 'Prices', 'Housing', 'Fiscal']
 
-const macroGdpData = [
-  { period: '2023Q1', gdp: 1.2, gniStar: 2.5, mdd: 0.8 },
-  { period: '2023Q2', gdp: 1.5, gniStar: 2.2, mdd: 1.0 },
-  { period: '2023Q3', gdp: 1.8, gniStar: 2.8, mdd: 1.3 },
-  { period: '2023Q4', gdp: 1.6, gniStar: 2.6, mdd: 1.1 },
-  { period: '2024Q1', gdp: 1.8, gniStar: 3.2, mdd: 1.5 },
-  { period: '2024Q2', gdp: 2.0, gniStar: 2.8, mdd: 1.7 },
-  { period: '2024Q3', gdp: 1.9, gniStar: 3.1, mdd: 1.6 },
-  { period: '2024Q4', gdp: 2.1, gniStar: 2.9, mdd: 1.8 },
-]
-
-const employmentData = [
-  { period: '2023Q1', unemployment: 4.8, youth: 10.8 },
-  { period: '2023Q2', unemployment: 4.6, youth: 10.5 },
-  { period: '2023Q3', unemployment: 4.5, youth: 10.3 },
-  { period: '2023Q4', unemployment: 4.4, youth: 10.1 },
-  { period: '2024Q1', unemployment: 4.5, youth: 10.2 },
-  { period: '2024Q2', unemployment: 4.4, youth: 9.8 },
-  { period: '2024Q3', unemployment: 4.3, youth: 9.5 },
-  { period: '2024Q4', unemployment: 4.2, youth: 9.3 },
-]
-
-const pricesData = [
-  { period: '2023Q1', value: 6.2 }, { period: '2023Q2', value: 5.4 },
-  { period: '2023Q3', value: 4.5 }, { period: '2023Q4', value: 3.8 },
-  { period: '2024Q1', value: 3.2 }, { period: '2024Q2', value: 2.8 },
-  { period: '2024Q3', value: 2.5 }, { period: '2024Q4', value: 2.3 },
-]
-
-const housePriceData = [
-  { period: '2020', value: 100 }, { period: '2021', value: 108 },
-  { period: '2022', value: 120 }, { period: '2023', value: 128 },
-  { period: '2024', value: 135 }, { period: '2025', value: 143 },
-]
-
-const fiscalData = [
-  { period: '2020', value: -5.1 }, { period: '2021', value: -3.8 },
-  { period: '2022', value: -1.5 }, { period: '2023', value: 0.2 },
-  { period: '2024', value: 0.8 }, { period: '2025', value: 1.2 },
-]
-
-const tabContent = {
-  Macro: {
-    kpis: [
-      { title: 'GDP Growth', value: '2.1%', subtitle: 'Q4 2024 YoY', icon: TrendingUp, color: 'sky' },
-      { title: 'GNI* Growth', value: '2.9%', subtitle: 'Q4 2024 YoY', icon: Activity, color: 'emerald' },
-      { title: 'Mod. Domestic Demand', value: '1.8%', subtitle: 'Q4 2024 YoY', icon: BarChart3, color: 'indigo' },
-    ],
-    chart: { title: 'GDP, GNI* & Modified Domestic Demand (%)', data: macroGdpData, multiLine: true,
-      lines: [
-        { dataKey: 'gdp', label: 'GDP', color: CHART_COLORS[0] },
-        { dataKey: 'gniStar', label: 'GNI*', color: CHART_COLORS[1] },
-        { dataKey: 'mdd', label: 'MDD', color: CHART_COLORS[2] },
-      ],
-    },
-  },
-  Employment: {
-    kpis: [
-      { title: 'Unemployment Rate', value: '4.2%', subtitle: 'Feb 2026', icon: Users, color: 'amber' },
-      { title: 'Youth Unemployment', value: '9.3%', subtitle: 'Q4 2024', icon: UserX, color: 'rose' },
-      { title: 'Labour Force', value: '2.71M', subtitle: 'Q4 2025', icon: Users, color: 'blue' },
-    ],
-    chart: { title: 'Unemployment & Youth Unemployment (%)', data: employmentData, multiLine: true,
-      lines: [
-        { dataKey: 'unemployment', label: 'Overall', color: CHART_COLORS[1] },
-        { dataKey: 'youth', label: 'Youth (15-24)', color: CHART_COLORS[4] },
-      ],
-    },
-  },
-  Prices: {
-    kpis: [
-      { title: 'HICP Inflation', value: '2.3%', subtitle: 'Feb 2026', icon: DollarSign, color: 'rose' },
-      { title: 'CPI Annual Change', value: '2.1%', subtitle: 'Feb 2026', icon: DollarSign, color: 'orange' },
-    ],
-    chart: { title: 'CPI / HICP Inflation (%)', data: pricesData, color: CHART_COLORS[2] },
-  },
-  Housing: {
-    kpis: [
-      { title: 'House Price Index', value: '143.0', subtitle: 'Base 2020 = 100', icon: Home, color: 'violet' },
-      { title: 'Annual Change', value: '+6.2%', subtitle: 'Feb 2026', icon: Home, color: 'cyan' },
-    ],
-    chart: { title: 'House Price Index (2020=100)', data: housePriceData, color: CHART_COLORS[4] },
-  },
-  Fiscal: {
-    kpis: [
-      { title: 'Government Balance', value: '+1.2%', subtitle: '% of GDP, 2025', icon: Landmark, color: 'green' },
-      { title: 'Debt-to-GDP', value: '42%', subtitle: '2025 est.', icon: Landmark, color: 'slate' },
-    ],
-    chart: { title: 'Government Balance (% of GDP)', data: fiscalData, color: CHART_COLORS[5] },
-  },
-}
-
 export default function IrishEconomy() {
   const [activeTab, setActiveTab] = useState('Macro')
-  const content = tabContent[activeTab]
+  const [data, setData] = useState({})
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadAll() {
+      const fetchers = {
+        gdp: fetchGDPGrowth,
+        unemployment: fetchUnemploymentRate,
+        youthUnemployment: fetchYouthUnemployment,
+        hicp: fetchHICPInflation,
+        housePrices: fetchHousePriceIndex,
+        govBalance: fetchGovBalance,
+        govDebt: fetchGovDebt,
+      }
+
+      const keys = Object.keys(fetchers)
+      const results = await Promise.allSettled(keys.map((k) => fetchers[k]()))
+
+      if (cancelled) return
+
+      const newData = {}
+      const newErrors = {}
+
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled' && result.value.length > 0) {
+          newData[keys[i]] = result.value
+        } else {
+          newErrors[keys[i]] =
+            result.status === 'rejected'
+              ? result.reason?.message || 'Unknown error'
+              : 'No data available'
+        }
+      })
+
+      setData(newData)
+      setErrors(newErrors)
+      setLoading(false)
+    }
+
+    loadAll()
+    return () => { cancelled = true }
+  }, [])
+
+  function latest(key) {
+    const s = data[key]
+    return s && s.length > 0 ? s[s.length - 1] : null
+  }
+
+  function slice(key, n) {
+    const s = data[key]
+    if (!s) return []
+    return n ? s.slice(-n) : s
+  }
+
+  function renderTabContent() {
+    switch (activeTab) {
+      case 'Macro':
+        return <MacroTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
+      case 'Employment':
+        return <EmploymentTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
+      case 'Prices':
+        return <PricesTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
+      case 'Housing':
+        return <HousingTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
+      case 'Fiscal':
+        return <FiscalTab data={data} errors={errors} loading={loading} latest={latest} slice={slice} />
+      default:
+        return null
+    }
+  }
 
   return (
     <motion.div
@@ -113,7 +103,7 @@ export default function IrishEconomy() {
     >
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Irish Economic Overview</h1>
-        <p className="text-slate-500 mt-1">Key indicators for the Irish economy</p>
+        <p className="text-slate-500 mt-1">Live data from Eurostat for Ireland</p>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -132,44 +122,250 @@ export default function IrishEconomy() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {content.kpis.map((kpi) => (
-          <KpiCard key={kpi.title} {...kpi} />
-        ))}
+      {renderTabContent()}
+    </motion.div>
+  )
+}
+
+/* ── Tab components ─────────────────────────────────────────────────── */
+
+function MacroTab({ errors, loading, latest, slice }) {
+  const gdpLatest = latest('gdp')
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiCard
+          title="GDP Growth (YoY)"
+          value={gdpLatest ? `${gdpLatest.value}%` : '\u2014'}
+          subtitle={gdpLatest ? `${gdpLatest.period} \u00b7 Eurostat` : 'Loading\u2026'}
+          icon={TrendingUp}
+          color="sky"
+          loading={loading}
+        />
       </div>
 
-      <ChartCard title={content.chart.title}>
-        <LineChart data={content.chart.data}>
+      <Card className="border-sky-200 bg-sky-50">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
+          <p className="text-sm text-sky-800">
+            GNI* (Modified Gross National Income) and Modified Domestic Demand are Ireland-specific
+            metrics published by the{' '}
+            <a
+              href="https://www.cso.ie/en/statistics/nationalaccounts/quarterlynationalaccounts/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline"
+            >
+              CSO Quarterly National Accounts
+            </a>
+            . They strip out the distorting effects of multinational activity on headline GDP.
+          </p>
+        </CardContent>
+      </Card>
+
+      <ChartCard
+        title="GDP Growth (% YoY, quarterly)"
+        subtitle="Source: Eurostat namq_10_gdp"
+        loading={loading}
+        error={errors.gdp}
+      >
+        <LineChart data={slice('gdp')}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" name="GDP Growth" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
+        </LineChart>
+      </ChartCard>
+    </div>
+  )
+}
+
+function EmploymentTab({ errors, loading, latest, slice, data }) {
+  const unemp = latest('unemployment')
+  const youth = latest('youthUnemployment')
+
+  // Merge unemployment and youth data by period for dual-line chart
+  const merged = (() => {
+    const uData = data.unemployment || []
+    const yData = data.youthUnemployment || []
+    const map = new Map()
+    uData.forEach((d) => map.set(d.period, { period: d.period, unemployment: d.value }))
+    yData.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.youth = d.value
+      map.set(d.period, existing)
+    })
+    return Array.from(map.values())
+      .sort((a, b) => (a.period < b.period ? -1 : 1))
+      .slice(-24)
+  })()
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KpiCard
+          title="Unemployment Rate"
+          value={unemp ? `${unemp.value}%` : '\u2014'}
+          subtitle={unemp ? `${unemp.period} \u00b7 Eurostat` : 'Loading\u2026'}
+          icon={Users}
+          color="amber"
+          loading={loading}
+        />
+        <KpiCard
+          title="Youth Unemployment"
+          value={youth ? `${youth.value}%` : '\u2014'}
+          subtitle={youth ? `${youth.period} \u00b7 Eurostat` : 'Loading\u2026'}
+          icon={UserX}
+          color="rose"
+          loading={loading}
+        />
+      </div>
+
+      <ChartCard
+        title="Unemployment Rates (%, monthly, SA)"
+        subtitle="Source: Eurostat une_rt_m"
+        loading={loading}
+        error={errors.unemployment && errors.youthUnemployment ? errors.unemployment : undefined}
+      >
+        <LineChart data={merged}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="unemployment" name="Overall" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 2 }} />
+          <Line type="monotone" dataKey="youth" name="Youth (< 25)" stroke={CHART_COLORS[4]} strokeWidth={2} dot={{ r: 2 }} />
+        </LineChart>
+      </ChartCard>
+    </div>
+  )
+}
+
+function PricesTab({ errors, loading, latest, slice }) {
+  const hicp = latest('hicp')
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KpiCard
+          title="HICP Inflation"
+          value={hicp ? `${hicp.value}%` : '\u2014'}
+          subtitle={hicp ? `${hicp.period} \u00b7 Eurostat` : 'Loading\u2026'}
+          icon={DollarSign}
+          color="rose"
+          loading={loading}
+        />
+      </div>
+
+      <ChartCard
+        title="HICP Annual Rate of Change (%, monthly)"
+        subtitle="Source: Eurostat prc_hicp_manr"
+        loading={loading}
+        error={errors.hicp}
+      >
+        <LineChart data={slice('hicp', 36)}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" name="HICP" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 2 }} />
+        </LineChart>
+      </ChartCard>
+    </div>
+  )
+}
+
+function HousingTab({ errors, loading, latest, slice }) {
+  const hpi = latest('housePrices')
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KpiCard
+          title="House Price Index"
+          value={hpi ? `${hpi.value}` : '\u2014'}
+          subtitle={hpi ? `${hpi.period} \u00b7 Eurostat (2015=100)` : 'Loading\u2026'}
+          icon={Home}
+          color="violet"
+          loading={loading}
+        />
+      </div>
+
+      <ChartCard
+        title="House Price Index (2015=100, quarterly)"
+        subtitle="Source: Eurostat prc_hpi_q"
+        loading={loading}
+        error={errors.housePrices}
+      >
+        <LineChart data={slice('housePrices')}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" name="HPI" stroke={CHART_COLORS[4]} strokeWidth={2} dot={{ r: 3 }} />
+        </LineChart>
+      </ChartCard>
+    </div>
+  )
+}
+
+function FiscalTab({ errors, loading, latest, slice, data }) {
+  const bal = latest('govBalance')
+  const debt = latest('govDebt')
+
+  // Merge balance and debt by period
+  const merged = (() => {
+    const bData = data.govBalance || []
+    const dData = data.govDebt || []
+    const map = new Map()
+    bData.forEach((d) => map.set(d.period, { period: d.period, balance: d.value }))
+    dData.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.debt = d.value
+      map.set(d.period, existing)
+    })
+    return Array.from(map.values()).sort((a, b) => (a.period < b.period ? -1 : 1))
+  })()
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KpiCard
+          title="Government Balance"
+          value={bal ? `${bal.value > 0 ? '+' : ''}${bal.value}%` : '\u2014'}
+          subtitle={bal ? `${bal.period} \u00b7 % GDP \u00b7 Eurostat` : 'Loading\u2026'}
+          icon={Landmark}
+          color="green"
+          loading={loading}
+        />
+        <KpiCard
+          title="Government Debt"
+          value={debt ? `${debt.value}%` : '\u2014'}
+          subtitle={debt ? `${debt.period} \u00b7 % GDP \u00b7 Eurostat` : 'Loading\u2026'}
+          icon={Landmark}
+          color="slate"
+          loading={loading}
+        />
+      </div>
+
+      <ChartCard
+        title="Government Balance & Debt (% of GDP, annual)"
+        subtitle="Source: Eurostat gov_10dd_edpt1"
+        loading={loading}
+        error={errors.govBalance && errors.govDebt ? errors.govBalance : undefined}
+      >
+        <LineChart data={merged}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <Tooltip />
-          {content.chart.multiLine ? (
-            <>
-              <Legend />
-              {content.chart.lines.map((line) => (
-                <Line
-                  key={line.dataKey}
-                  type="monotone"
-                  dataKey={line.dataKey}
-                  name={line.label}
-                  stroke={line.color}
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: line.color }}
-                />
-              ))}
-            </>
-          ) : (
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={content.chart.color}
-              strokeWidth={2}
-              dot={{ r: 4, fill: content.chart.color }}
-            />
-          )}
+          <Legend />
+          <Line type="monotone" dataKey="balance" name="Balance (% GDP)" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="debt" name="Debt (% GDP)" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ChartCard>
-    </motion.div>
+    </div>
   )
 }

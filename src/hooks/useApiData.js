@@ -1,15 +1,21 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
-export function useApiData(fetchFn, deps = []) {
+/**
+ * Hook for fetching API data with loading/error states and caching.
+ * Uses a ref to avoid stale closures and dependency-array bugs.
+ */
+export function useApiData(fetchFn) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const fetchRef = useRef(fetchFn)
+  fetchRef.current = fetchFn
 
   const refetch = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const result = await fetchFn()
+      const result = await fetchRef.current()
       setData(result)
     } catch (err) {
       setError(err.message)
@@ -17,7 +23,7 @@ export function useApiData(fetchFn, deps = []) {
     } finally {
       setLoading(false)
     }
-  }, deps)
+  }, [])
 
   useEffect(() => {
     refetch()

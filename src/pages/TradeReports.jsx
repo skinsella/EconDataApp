@@ -1,24 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
-import { ReportCard } from '@/components/ReportCard'
 import { ChartCard } from '@/components/ChartCard'
+import { ReportCard } from '@/components/ReportCard'
 import { TRADE_REPORTS, CHART_COLORS } from '@/lib/constants'
+import { fetchTradeToGDP } from '@/services/indicators'
 
 const filters = ['All', 'wto', 'imf', 'eu_trade']
 const filterLabels = { All: 'All', wto: 'WTO', imf: 'IMF', eu_trade: 'EU Trade' }
 
-const tradeGdpData = [
-  { year: '2019', value: 220 },
-  { year: '2020', value: 210 },
-  { year: '2021', value: 230 },
-  { year: '2022', value: 240 },
-  { year: '2023', value: 235 },
-  { year: '2024', value: 245 },
-]
-
 export default function TradeReports() {
   const [activeFilter, setActiveFilter] = useState('All')
+  const [tradeData, setTradeData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchTradeToGDP()
+      .then((d) => { if (!cancelled) setTradeData(d) })
+      .catch((e) => { if (!cancelled) setError(e.message) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
 
   const filteredReports =
     activeFilter === 'All'
@@ -37,12 +41,17 @@ export default function TradeReports() {
         <p className="text-slate-500 mt-1">Global and EU trade analysis and outlook</p>
       </div>
 
-      <ChartCard title="Ireland Trade as % of GDP" subtitle="Total trade (exports + imports)">
-        <LineChart data={tradeGdpData}>
+      <ChartCard
+        title="Ireland: Trade as % of GDP"
+        subtitle="Source: World Bank (NE.TRD.GNFS.ZS)"
+        loading={loading}
+        error={error}
+      >
+        <LineChart data={tradeData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="year" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <XAxis dataKey="period" tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
-          <Tooltip />
+          <Tooltip formatter={(v) => `${v}%`} />
           <Line
             type="monotone"
             dataKey="value"
@@ -68,7 +77,7 @@ export default function TradeReports() {
           </button>
         ))}
         <span className="ml-auto text-sm text-slate-500">
-          {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+          {filteredReports.length} source{filteredReports.length !== 1 ? 's' : ''}
         </span>
       </div>
 

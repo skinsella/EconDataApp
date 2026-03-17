@@ -5,7 +5,7 @@ import { ExternalLink } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 export function ReportCard({ report }) {
-  const { title, source, url, published_date, summary_points, category } = report
+  const { title, source, url, published_date, summary_points, description } = report
   const colors = SOURCE_COLORS[source] || { bg: 'bg-slate-100', text: 'text-slate-800' }
 
   return (
@@ -14,14 +14,19 @@ export function ReportCard({ report }) {
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-base">{title}</CardTitle>
           <Badge className={`${colors.bg} ${colors.text} shrink-0`}>
-            {source.toUpperCase()}
+            {source.toUpperCase().replace('_', ' ')}
           </Badge>
         </div>
-        <p className="text-xs text-slate-500">
-          {format(parseISO(published_date), 'd MMM yyyy')}
-        </p>
+        {published_date && (
+          <p className="text-xs text-slate-500">
+            {format(parseISO(published_date), 'd MMM yyyy')}
+          </p>
+        )}
       </CardHeader>
       <CardContent>
+        {description && (
+          <p className="mb-4 text-sm text-slate-600">{description}</p>
+        )}
         {summary_points && summary_points.length > 0 && (
           <ul className="mb-4 space-y-1.5">
             {summary_points.map((point, i) => (
@@ -39,7 +44,7 @@ export function ReportCard({ report }) {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-600 hover:text-sky-700"
           >
-            Read more
+            View latest
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
