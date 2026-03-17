@@ -1,4 +1,4 @@
-import { fetchEurostatData } from './eurostat'
+import { fetchEurostatData, fetchEurostatMultiGeo, fetchEurostatMultiDim } from './eurostat'
 import { fetchWorldBankData } from './worldbank'
 import { fetchCSOSeries } from './cso'
 
@@ -292,4 +292,196 @@ export async function fetchEmigration() {
   return data
     .filter(d => parseInt(d.period, 10) >= 2010)
     .map(d => ({ period: d.period, value: round1(d.value) }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PEER COMPARISONS
+// ═══════════════════════════════════════════════════════════════════════
+
+const PEER_GEOS = ['IE', 'EA20', 'EU27_2020', 'DE', 'NL', 'FR']
+const GEO_LABELS = { IE: 'Ireland', EA20: 'Euro Area', EU27_2020: 'EU 27', DE: 'Germany', NL: 'Netherlands', FR: 'France' }
+
+function tagGeo(data) {
+  return data.map(d => ({ ...d, geoLabel: GEO_LABELS[d.geo] || d.geo }))
+}
+
+export async function fetchUnemploymentComparison() {
+  const data = await fetchEurostatMultiGeo('une_rt_m', {
+    geo: PEER_GEOS, age: 'TOTAL', sex: 'T', unit: 'PC_ACT', s_adj: 'SA',
+    sinceTimePeriod: '2022-01',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+export async function fetchInflationComparison() {
+  const data = await fetchEurostatMultiGeo('prc_hicp_manr', {
+    geo: PEER_GEOS, coicop: 'CP00', sinceTimePeriod: '2022-01',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+export async function fetchGDPGrowthComparison() {
+  const data = await fetchEurostatMultiGeo('namq_10_gdp', {
+    geo: PEER_GEOS, unit: 'CLV_PCH_SM', s_adj: 'SCA', na_item: 'B1GQ',
+    sinceTimePeriod: '2020-Q1',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+export async function fetchDebtComparison() {
+  const data = await fetchEurostatMultiGeo('gov_10dd_edpt1', {
+    geo: PEER_GEOS, na_item: 'GD', sector: 'S13', unit: 'PC_GDP',
+    sinceTimePeriod: '2015',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round1(d.value) }))
+}
+
+export async function fetchBondYieldComparison() {
+  const data = await fetchEurostatMultiGeo('irt_lt_mcby_m', {
+    geo: ['IE', 'EA20', 'DE', 'FR', 'NL'], int_rt: 'MCBY',
+    sinceTimePeriod: '2022-01',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round2(d.value) }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PUBLIC FINANCES
+// ═══════════════════════════════════════════════════════════════════════
+
+// Tax revenue by type (% GDP, annual)
+export async function fetchTaxRevenue() {
+  const items = ['D2_D5_D91', 'D2', 'D5', 'D61']
+  const results = await Promise.all(
+    items.map(na_item =>
+      fetchEurostatData('gov_10a_taxag', {
+        geo: 'IE', na_item, sector: 'S13', unit: 'PC_GDP', sinceTimePeriod: '2015',
+      }).then(data => data.map(d => ({ ...d, category: na_item })))
+    )
+  )
+  return results.flat()
+}
+
+const TAX_LABELS = {
+  D2_D5_D91: 'Total Tax',
+  D2: 'Production & Import Taxes',
+  D5: 'Income & Wealth Taxes',
+  D61: 'Social Contributions',
+}
+export { TAX_LABELS }
+
+// Government spending by COFOG function (% GDP, annual)
+export async function fetchGovSpending() {
+  const cofogs = ['TOTAL', 'GF01', 'GF04', 'GF07', 'GF09', 'GF10']
+  const results = await Promise.all(
+    cofogs.map(cofog99 =>
+      fetchEurostatData('gov_10a_exp', {
+        geo: 'IE', cofog99, na_item: 'TE', sector: 'S13', unit: 'PC_GDP',
+        sinceTimePeriod: '2015',
+      }).then(data => data.map(d => ({ ...d, cofog: cofog99 })))
+    )
+  )
+  return results.flat()
+}
+
+const COFOG_LABELS = {
+  TOTAL: 'Total Expenditure',
+  GF01: 'General Public Services',
+  GF04: 'Economic Affairs',
+  GF07: 'Health',
+  GF09: 'Education',
+  GF10: 'Social Protection',
+}
+export { COFOG_LABELS }
+
+// ═══════════════════════════════════════════════════════════════════════
+// STRUCTURAL INDICATORS
+// ═══════════════════════════════════════════════════════════════════════
+
+// Old-age dependency ratio (annual)
+export async function fetchDependencyRatio() {
+  const data = await fetchEurostatData('demo_pjanind', {
+    geo: 'IE', indic_de: 'DEPRATIO1', sinceTimePeriod: '2010',
+  })
+  return data.map(d => ({ period: d.period, value: round1(d.value) }))
+}
+
+// Proportion aged 65+ (annual)
+export async function fetchAged65Plus() {
+  const data = await fetchEurostatData('demo_pjanind', {
+    geo: 'IE', indic_de: 'PC_Y65_MAX', sinceTimePeriod: '2010',
+  })
+  return data.map(d => ({ period: d.period, value: round1(d.value) }))
+}
+
+// Dependency ratio comparison across countries
+export async function fetchDependencyComparison() {
+  const data = await fetchEurostatMultiGeo('demo_pjanind', {
+    geo: PEER_GEOS, indic_de: 'PC_Y65_MAX', sinceTimePeriod: '2015',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round1(d.value) }))
+}
+
+// At-risk-of-poverty rate (annual, %)
+export async function fetchPovertyRate() {
+  const data = await fetchEurostatData('ilc_li02', {
+    geo: 'IE', indic_il: 'LI_R_MD60', sex: 'T', age: 'TOTAL', unit: 'PC',
+    sinceTimePeriod: '2015',
+  })
+  return data.map(d => ({ period: d.period, value: round1(d.value) }))
+}
+
+// Poverty comparison
+export async function fetchPovertyComparison() {
+  const data = await fetchEurostatMultiGeo('ilc_li02', {
+    geo: PEER_GEOS, indic_il: 'LI_R_MD60', sex: 'T', age: 'TOTAL', unit: 'PC',
+    sinceTimePeriod: '2020',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round1(d.value) }))
+}
+
+// Labour cost index (quarterly, YoY % change)
+export async function fetchLabourCostIndex() {
+  const data = await fetchEurostatData('lc_lci_r2_q', {
+    geo: 'IE', lcstruct: 'D1_D4_MD5', nace_r2: 'B-S',
+    s_adj: 'SCA', unit: 'PCH_SM', sinceTimePeriod: '2020-Q1',
+  })
+  return data.map(d => ({ period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+// Labour cost comparison
+export async function fetchLabourCostComparison() {
+  const data = await fetchEurostatMultiGeo('lc_lci_r2_q', {
+    geo: ['IE', 'EA20', 'DE', 'NL', 'FR'], lcstruct: 'D1_D4_MD5', nace_r2: 'B-S',
+    s_adj: 'SCA', unit: 'I20', sinceTimePeriod: '2020-Q1',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+// Electricity prices for households (half-yearly, EUR/kWh)
+export async function fetchElectricityPrices() {
+  const data = await fetchEurostatData('nrg_pc_204', {
+    geo: 'IE', nrg_cons: 'TOT_KWH', tax: 'I_TAX', currency: 'EUR',
+    sinceTimePeriod: '2020',
+  })
+  return data.map(d => ({ period: d.period, value: round2(d.value) }))
+}
+
+// Electricity price comparison
+export async function fetchElectricityComparison() {
+  const data = await fetchEurostatMultiGeo('nrg_pc_204', {
+    geo: ['IE', 'EA20', 'EU27_2020', 'DE', 'NL', 'FR'],
+    nrg_cons: 'TOT_KWH', tax: 'I_TAX', currency: 'EUR',
+    sinceTimePeriod: '2022',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round2(d.value) }))
+}
+
+// FDI inward positions (annual, MIO_EUR)
+export async function fetchFDIInward() {
+  const data = await fetchEurostatData('bop_fdi6_pos', {
+    geo: 'IE', partner: 'WRL_REST', currency: 'MIO_EUR', nace_r2: 'TOTAL',
+    counterp: 'IMM', entity: 'TOTAL', stk_flow: 'NI', fdi_item: 'DI__D__F',
+    sinceTimePeriod: '2015',
+  })
+  return data.map(d => ({ period: d.period, value: Math.round(d.value) }))
 }

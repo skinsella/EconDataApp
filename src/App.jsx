@@ -2,6 +2,9 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import IrishEconomy from './pages/IrishEconomy'
+import Benchmarks from './pages/Benchmarks'
+import PublicFinances from './pages/PublicFinances'
+import Structural from './pages/Structural'
 import LatestReports from './pages/LatestReports'
 import TradeReports from './pages/TradeReports'
 import HousingReports from './pages/HousingReports'
@@ -17,6 +20,9 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/irish-economy" element={<IrishEconomy />} />
+          <Route path="/benchmarks" element={<Benchmarks />} />
+          <Route path="/public-finances" element={<PublicFinances />} />
+          <Route path="/structural" element={<Structural />} />
           <Route path="/latest-reports" element={<LatestReports />} />
           <Route path="/trade-reports" element={<TradeReports />} />
           <Route path="/housing" element={<HousingReports />} />

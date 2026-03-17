@@ -9,11 +9,17 @@ import {
   Globe,
   ClipboardList,
   BarChart3,
+  Scale,
+  Landmark,
+  Building,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Economic Overview', path: '/irish-economy', icon: TrendingUp },
+  { name: 'Benchmarks', path: '/benchmarks', icon: Scale },
+  { name: 'Public Finances', path: '/public-finances', icon: Landmark },
+  { name: 'Structural', path: '/structural', icon: Building },
   { name: 'Latest Reports', path: '/latest-reports', icon: FileText },
   { name: 'Trade Reports', path: '/trade-reports', icon: Globe },
   { name: 'Housing Reports', path: '/housing', icon: HomeIcon },
