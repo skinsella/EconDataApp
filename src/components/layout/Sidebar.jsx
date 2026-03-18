@@ -12,11 +12,15 @@ import {
   Scale,
   Landmark,
   Building,
+  Eye,
+  Smile,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Economic Overview', path: '/irish-economy', icon: TrendingUp },
+  { name: 'Outlook & Forecasts', path: '/outlook', icon: Eye },
+  { name: 'Confidence', path: '/confidence', icon: Smile },
   { name: 'Benchmarks', path: '/benchmarks', icon: Scale },
   { name: 'Public Finances', path: '/public-finances', icon: Landmark },
   { name: 'Structural', path: '/structural', icon: Building },

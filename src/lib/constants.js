@@ -200,6 +200,7 @@ export const DATA_SOURCES = [
   { name: 'Central Statistics Office', provider: 'cso', endpoint: API_URLS.CSO, frequency: 'monthly', testPath: '/CPM01/JSON-stat/2.0/en' },
   { name: 'European Central Bank', provider: 'ecb', endpoint: API_URLS.ECB, frequency: 'daily', testPath: '/EXR/M.USD.EUR.SP00.A?format=jsondata' },
   { name: 'World Bank', provider: 'worldbank', endpoint: API_URLS.WORLD_BANK, frequency: 'yearly', testPath: '/country/IRL/indicator/NY.GDP.MKTP.CD?format=json&per_page=1&date=2023' },
+  { name: 'IMF DataMapper', provider: 'imf', endpoint: 'https://www.imf.org/external/datamapper/api/v1', frequency: 'biannual (WEO)', testPath: '/NGDP_RPCH/IRL' },
   { name: 'OECD', provider: 'oecd', endpoint: API_URLS.OECD, frequency: 'quarterly', testPath: '' },
   { name: 'Central Bank of Ireland', provider: 'cbi', endpoint: 'https://www.centralbank.ie', frequency: 'quarterly', testPath: '' },
 ]

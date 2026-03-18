@@ -514,3 +514,90 @@ export async function fetchFDIInward() {
   })
   return data.map(d => ({ period: d.period, value: Math.round(d.value) }))
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// CONFIDENCE & SENTIMENT (Leading Indicators)
+// ═══════════════════════════════════════════════════════════════════════
+
+// Consumer Confidence Indicator (monthly, balance, SA)
+export async function fetchConsumerConfidence() {
+  const data = await fetchEurostatData('ei_bsco_m', {
+    geo: 'IE', indic: 'BS-CSMCI-BAL', s_adj: 'SA',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Economic Sentiment Indicator (monthly, SA)
+export async function fetchEconomicSentiment() {
+  const data = await fetchEurostatData('ei_bssi_m_r2', {
+    geo: 'IE', indic: 'BS-ESI-I', s_adj: 'SA',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Industrial Confidence (monthly, balance, SA)
+export async function fetchIndustrialConfidence() {
+  const data = await fetchEurostatData('ei_bssi_m_r2', {
+    geo: 'IE', indic: 'BS-ICI-BAL', s_adj: 'SA',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Services Confidence (monthly, balance, SA)
+export async function fetchServicesConfidence() {
+  const data = await fetchEurostatData('ei_bssi_m_r2', {
+    geo: 'IE', indic: 'BS-SCI-BAL', s_adj: 'SA',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Construction Confidence (monthly, balance, SA)
+export async function fetchConstructionConfidence() {
+  const data = await fetchEurostatData('ei_bssi_m_r2', {
+    geo: 'IE', indic: 'BS-CCI-BAL', s_adj: 'SA',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Retail Trade Volume (monthly, SA, index 2015=100)
+export async function fetchRetailTrade() {
+  const data = await fetchEurostatData('sts_trtu_m', {
+    geo: 'IE', nace_r2: 'G47', s_adj: 'SCA', unit: 'I15',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Industrial Production Index (monthly, SA, index 2015=100)
+export async function fetchIndustrialProduction() {
+  const data = await fetchEurostatData('sts_inpr_m', {
+    geo: 'IE', nace_r2: 'B-D', s_adj: 'SCA', unit: 'I15',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// Consumer confidence comparison
+export async function fetchConsumerConfidenceComparison() {
+  const data = await fetchEurostatMultiGeo('ei_bsco_m', {
+    geo: ['IE', 'EA20', 'EU27_2020', 'DE', 'NL', 'FR'],
+    indic: 'BS-CSMCI-BAL', s_adj: 'SA',
+    sinceTimePeriod: '2022-01',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// ESI comparison
+export async function fetchSentimentComparison() {
+  const data = await fetchEurostatMultiGeo('ei_bssi_m_r2', {
+    geo: ['IE', 'EA20', 'EU27_2020', 'DE', 'NL', 'FR'],
+    indic: 'BS-ESI-I', s_adj: 'SA',
+    sinceTimePeriod: '2022-01',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
+}

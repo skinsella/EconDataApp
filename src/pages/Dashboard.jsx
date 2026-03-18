@@ -163,6 +163,7 @@ export default function Dashboard() {
                 subtitle={`Source: ${ind.source}`}
                 loading={isLoading}
                 error={hasError ? errors[ind.key] : undefined}
+                data={cd}
               >
                 <LineChart data={cd}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -191,7 +192,7 @@ export default function Dashboard() {
       </div>
 
       <p className="text-xs text-slate-400 text-center">
-        Data sourced live from Eurostat, CSO, and World Bank. Fiscal ratios use GNI as denominator. Last refresh: {format(new Date(), 'd MMM yyyy HH:mm')}.
+        Data sourced live from Eurostat, CSO, World Bank, and IMF. Fiscal ratios use GNI as denominator. Last refresh: {format(new Date(), 'd MMM yyyy HH:mm')}.
       </p>
     </motion.div>
   )

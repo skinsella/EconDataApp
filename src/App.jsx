@@ -5,6 +5,8 @@ import IrishEconomy from './pages/IrishEconomy'
 import Benchmarks from './pages/Benchmarks'
 import PublicFinances from './pages/PublicFinances'
 import Structural from './pages/Structural'
+import Outlook from './pages/Outlook'
+import Confidence from './pages/Confidence'
 import LatestReports from './pages/LatestReports'
 import TradeReports from './pages/TradeReports'
 import HousingReports from './pages/HousingReports'
@@ -23,6 +25,8 @@ export default function App() {
           <Route path="/benchmarks" element={<Benchmarks />} />
           <Route path="/public-finances" element={<PublicFinances />} />
           <Route path="/structural" element={<Structural />} />
+          <Route path="/outlook" element={<Outlook />} />
+          <Route path="/confidence" element={<Confidence />} />
           <Route path="/latest-reports" element={<LatestReports />} />
           <Route path="/trade-reports" element={<TradeReports />} />
           <Route path="/housing" element={<HousingReports />} />
