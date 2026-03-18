@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "prefetch": "node scripts/fetch-imf-data.mjs",
+    "build": "node scripts/fetch-imf-data.mjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -191,6 +191,7 @@ export default function Outlook() {
               subtitle="Source: IMF World Economic Outlook"
               loading={loading}
               error={!loading && !hasData ? 'No data available' : undefined}
+              data={chartData}
             >
               <ComposedChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -230,7 +231,6 @@ export default function Outlook() {
                       />
                     )
                   }}
-                  strokeDasharray={(d) => undefined}
                 />
               </ComposedChart>
             </ChartCard>
