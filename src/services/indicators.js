@@ -603,3 +603,111 @@ export async function fetchSentimentComparison() {
   })
   return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// EXCHANGE RATES (from ECB via Eurostat)
+// ═══════════════════════════════════════════════════════════════════════
+
+// EUR/GBP exchange rate (monthly)
+export async function fetchEURGBP() {
+  const data = await fetchEurostatData('ert_bil_eur_m', {
+    geo: 'UK', currency: 'GBP', statinfo: 'AVG', sinceTimePeriod: '2022-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round2(1 / d.value) }))
+}
+
+// EUR/USD exchange rate (monthly)
+export async function fetchEURUSD() {
+  const data = await fetchEurostatData('ert_bil_eur_m', {
+    geo: 'US', currency: 'USD', statinfo: 'AVG', sinceTimePeriod: '2022-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round2(1 / d.value) }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// BOND SPREAD TO BUND
+// ═══════════════════════════════════════════════════════════════════════
+
+// Irish-German 10-year bond spread (monthly, percentage points)
+export async function fetchBundSpread() {
+  const [ieData, deData] = await Promise.all([
+    fetchEurostatData('irt_lt_mcby_m', {
+      geo: 'IE', int_rt: 'MCBY', sinceTimePeriod: '2022-01',
+    }),
+    fetchEurostatData('irt_lt_mcby_m', {
+      geo: 'DE', int_rt: 'MCBY', sinceTimePeriod: '2022-01',
+    }),
+  ])
+  const deMap = new Map(deData.map(d => [d.period, d.value]))
+  return ieData
+    .filter(d => deMap.has(d.period))
+    .map(d => ({
+      period: fmtMonth(d.period),
+      value: round2(d.value - deMap.get(d.period)),
+      ieYield: round2(d.value),
+      deYield: round2(deMap.get(d.period)),
+    }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CORE INFLATION & HICP LEVELS
+// ═══════════════════════════════════════════════════════════════════════
+
+// Core inflation (HICP excluding energy and unprocessed food, annual rate)
+export async function fetchCoreInflation() {
+  const data = await fetchEurostatData('prc_hicp_manr', {
+    geo: 'IE', coicop: 'TOT_X_NRG_FOOD', sinceTimePeriod: '2022-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// HICP level index comparison across countries (2015=100)
+export async function fetchHICPLevelComparison() {
+  const data = await fetchEurostatMultiGeo('prc_hicp_midx', {
+    geo: ['IE', 'EA20', 'DE', 'FR', 'UK'],
+    coicop: 'CP00', unit: 'I15',
+    sinceTimePeriod: '2022-01',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// GAS PRICES (Eurostat)
+// ═══════════════════════════════════════════════════════════════════════
+
+// Residential gas prices, IE vs EU (half-yearly, EUR/kWh)
+export async function fetchGasPricesResidential() {
+  const data = await fetchEurostatMultiGeo('nrg_pc_202', {
+    geo: ['IE', 'EU27_2020'], nrg_cons: 'TOT_GJ', tax: 'I_TAX', currency: 'EUR',
+    sinceTimePeriod: '2020',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round2(d.value) }))
+}
+
+// Business gas prices, IE vs EU (half-yearly, EUR/kWh)
+export async function fetchGasPricesBusiness() {
+  const data = await fetchEurostatMultiGeo('nrg_pc_203', {
+    geo: ['IE', 'EU27_2020'], nrg_cons: 'TOT_GJ', tax: 'X_TAX', currency: 'EUR',
+    sinceTimePeriod: '2020',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round2(d.value) }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LIVE REGISTER (CSO)
+// ═══════════════════════════════════════════════════════════════════════
+
+// Live Register monthly (seasonally adjusted)
+export async function fetchLiveRegister() {
+  const data = await fetchCSOSeries('LRM02', {
+    STATISTIC: 'LRM02C02',
+  })
+  const periodMap = new Map()
+  for (const d of data) {
+    if (!periodMap.has(d.period)) periodMap.set(d.period, d.value)
+  }
+  return Array.from(periodMap.entries())
+    .filter(([p]) => p >= '2020')
+    .sort(([a], [b]) => a < b ? -1 : 1)
+    .map(([period, value]) => ({ period: fmtMonth(period), value: Math.round(value) }))
+}

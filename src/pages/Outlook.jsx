@@ -9,7 +9,7 @@ import { KpiCard } from '@/components/KpiCard'
 import { ChartCard } from '@/components/ChartCard'
 import { Card, CardContent } from '@/components/ui/card'
 import { CHART_COLORS } from '@/lib/constants'
-import { fetchIMFMultiple, IMF_INDICATORS, IMF_LABELS, IMF_UNITS } from '@/services/imf'
+import { fetchIMFMultiple, fetchGlobalGrowth, IMF_INDICATORS, IMF_LABELS, IMF_UNITS, GLOBAL_GROWTH_LABELS, GLOBAL_GROWTH_COLORS } from '@/services/imf'
 
 const FORECAST_INDICATORS = [
   { code: 'NGDP_RPCH', icon: TrendingUp, color: 'sky', name: 'GDP Growth' },
@@ -40,6 +40,7 @@ function ForecastTooltip({ active, payload, label }) {
 
 export default function Outlook() {
   const [data, setData] = useState({})
+  const [globalData, setGlobalData] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -49,9 +50,13 @@ export default function Outlook() {
     async function load() {
       try {
         const codes = Object.values(IMF_INDICATORS)
-        const result = await fetchIMFMultiple(codes)
+        const [result, global] = await Promise.all([
+          fetchIMFMultiple(codes),
+          fetchGlobalGrowth().catch(() => ({})),
+        ])
         if (!cancelled) {
           setData(result)
+          setGlobalData(global)
           setLoading(false)
         }
       } catch (e) {
@@ -237,6 +242,53 @@ export default function Outlook() {
           )
         })}
       </div>
+
+      {/* ── Global GDP Growth Comparison ─────────────────────────────── */}
+      {Object.keys(globalData).length > 0 && (() => {
+        const countries = Object.keys(GLOBAL_GROWTH_LABELS)
+        const years = []
+        for (let y = 2019; y <= currentYear + 2; y++) years.push(String(y))
+
+        const chartData = years.map(year => {
+          const row = { period: year, forecast: parseInt(year) > currentYear }
+          countries.forEach(c => {
+            const series = globalData[c] || []
+            const point = series.find(d => d.period === year)
+            if (point) row[c] = point.value
+          })
+          return row
+        })
+
+        return (
+          <ChartCard
+            title="Global Economic Growth (%, annual)"
+            subtitle="Source: IMF World Economic Outlook — OECD Economic Outlook"
+            loading={loading}
+            data={chartData}
+          >
+            <ComposedChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="period" tick={{ fontSize: 11 }} stroke="#94a3b8" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+              <Tooltip content={<ForecastTooltip />} />
+              <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
+              <ReferenceLine x={String(currentYear)} stroke="#94a3b8" strokeDasharray="4 4" label={{ value: 'Now', position: 'top', fontSize: 10, fill: '#94a3b8' }} />
+              {countries.map(c => (
+                <Line
+                  key={c}
+                  type="monotone"
+                  dataKey={c}
+                  name={GLOBAL_GROWTH_LABELS[c]}
+                  stroke={GLOBAL_GROWTH_COLORS[c]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+              ))}
+            </ComposedChart>
+          </ChartCard>
+        )
+      })()}
 
       {/* ── Summary Table ─────────────────────────────────────────────── */}
       <Card>

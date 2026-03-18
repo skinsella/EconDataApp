@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-03-18T07:33:25.002Z",
+  "fetchedAt": "2026-03-18T08:36:38.984Z",
   "country": "IRL",
   "indicators": {
     "NGDP_RPCH": [
@@ -1366,6 +1366,1233 @@
       {
         "period": "2030",
         "value": 9.6,
+        "forecast": true
+      }
+    ]
+  },
+  "globalGrowth": {
+    "CHN": [
+      {
+        "period": "1980",
+        "value": 7.9,
+        "forecast": false
+      },
+      {
+        "period": "1981",
+        "value": 5.1,
+        "forecast": false
+      },
+      {
+        "period": "1982",
+        "value": 9,
+        "forecast": false
+      },
+      {
+        "period": "1983",
+        "value": 10.8,
+        "forecast": false
+      },
+      {
+        "period": "1984",
+        "value": 15.2,
+        "forecast": false
+      },
+      {
+        "period": "1985",
+        "value": 13.5,
+        "forecast": false
+      },
+      {
+        "period": "1986",
+        "value": 8.9,
+        "forecast": false
+      },
+      {
+        "period": "1987",
+        "value": 11.7,
+        "forecast": false
+      },
+      {
+        "period": "1988",
+        "value": 11.2,
+        "forecast": false
+      },
+      {
+        "period": "1989",
+        "value": 4.2,
+        "forecast": false
+      },
+      {
+        "period": "1990",
+        "value": 3.9,
+        "forecast": false
+      },
+      {
+        "period": "1991",
+        "value": 10.2,
+        "forecast": false
+      },
+      {
+        "period": "1992",
+        "value": 14.3,
+        "forecast": false
+      },
+      {
+        "period": "1993",
+        "value": 13.9,
+        "forecast": false
+      },
+      {
+        "period": "1994",
+        "value": 13.1,
+        "forecast": false
+      },
+      {
+        "period": "1995",
+        "value": 11,
+        "forecast": false
+      },
+      {
+        "period": "1996",
+        "value": 10,
+        "forecast": false
+      },
+      {
+        "period": "1997",
+        "value": 9.3,
+        "forecast": false
+      },
+      {
+        "period": "1998",
+        "value": 7.9,
+        "forecast": false
+      },
+      {
+        "period": "1999",
+        "value": 7.8,
+        "forecast": false
+      },
+      {
+        "period": "2000",
+        "value": 8.6,
+        "forecast": false
+      },
+      {
+        "period": "2001",
+        "value": 8.3,
+        "forecast": false
+      },
+      {
+        "period": "2002",
+        "value": 9.2,
+        "forecast": false
+      },
+      {
+        "period": "2003",
+        "value": 10.1,
+        "forecast": false
+      },
+      {
+        "period": "2004",
+        "value": 10.1,
+        "forecast": false
+      },
+      {
+        "period": "2005",
+        "value": 11.4,
+        "forecast": false
+      },
+      {
+        "period": "2006",
+        "value": 12.7,
+        "forecast": false
+      },
+      {
+        "period": "2007",
+        "value": 14.2,
+        "forecast": false
+      },
+      {
+        "period": "2008",
+        "value": 9.6,
+        "forecast": false
+      },
+      {
+        "period": "2009",
+        "value": 9.4,
+        "forecast": false
+      },
+      {
+        "period": "2010",
+        "value": 10.6,
+        "forecast": false
+      },
+      {
+        "period": "2011",
+        "value": 9.5,
+        "forecast": false
+      },
+      {
+        "period": "2012",
+        "value": 7.8,
+        "forecast": false
+      },
+      {
+        "period": "2013",
+        "value": 7.8,
+        "forecast": false
+      },
+      {
+        "period": "2014",
+        "value": 7.5,
+        "forecast": false
+      },
+      {
+        "period": "2015",
+        "value": 7,
+        "forecast": false
+      },
+      {
+        "period": "2016",
+        "value": 6.8,
+        "forecast": false
+      },
+      {
+        "period": "2017",
+        "value": 6.9,
+        "forecast": false
+      },
+      {
+        "period": "2018",
+        "value": 6.8,
+        "forecast": false
+      },
+      {
+        "period": "2019",
+        "value": 6.1,
+        "forecast": false
+      },
+      {
+        "period": "2020",
+        "value": 2.3,
+        "forecast": false
+      },
+      {
+        "period": "2021",
+        "value": 8.6,
+        "forecast": false
+      },
+      {
+        "period": "2022",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "2023",
+        "value": 5.4,
+        "forecast": false
+      },
+      {
+        "period": "2024",
+        "value": 5,
+        "forecast": false
+      },
+      {
+        "period": "2025",
+        "value": 4.8,
+        "forecast": false
+      },
+      {
+        "period": "2026",
+        "value": 4.2,
+        "forecast": false
+      },
+      {
+        "period": "2027",
+        "value": 4.2,
+        "forecast": true
+      },
+      {
+        "period": "2028",
+        "value": 4,
+        "forecast": true
+      },
+      {
+        "period": "2029",
+        "value": 3.7,
+        "forecast": true
+      },
+      {
+        "period": "2030",
+        "value": 3.4,
+        "forecast": true
+      }
+    ],
+    "EURO": [
+      {
+        "period": "1992",
+        "value": 1.4,
+        "forecast": false
+      },
+      {
+        "period": "1993",
+        "value": -0.8,
+        "forecast": false
+      },
+      {
+        "period": "1994",
+        "value": 2.5,
+        "forecast": false
+      },
+      {
+        "period": "1995",
+        "value": 2.9,
+        "forecast": false
+      },
+      {
+        "period": "1996",
+        "value": 1.7,
+        "forecast": false
+      },
+      {
+        "period": "1997",
+        "value": 2.7,
+        "forecast": false
+      },
+      {
+        "period": "1998",
+        "value": 3,
+        "forecast": false
+      },
+      {
+        "period": "1999",
+        "value": 3,
+        "forecast": false
+      },
+      {
+        "period": "2000",
+        "value": 3.9,
+        "forecast": false
+      },
+      {
+        "period": "2001",
+        "value": 2.2,
+        "forecast": false
+      },
+      {
+        "period": "2002",
+        "value": 0.9,
+        "forecast": false
+      },
+      {
+        "period": "2003",
+        "value": 0.7,
+        "forecast": false
+      },
+      {
+        "period": "2004",
+        "value": 2.3,
+        "forecast": false
+      },
+      {
+        "period": "2005",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2006",
+        "value": 3.3,
+        "forecast": false
+      },
+      {
+        "period": "2007",
+        "value": 3,
+        "forecast": false
+      },
+      {
+        "period": "2008",
+        "value": 0.4,
+        "forecast": false
+      },
+      {
+        "period": "2009",
+        "value": -4.5,
+        "forecast": false
+      },
+      {
+        "period": "2010",
+        "value": 2.1,
+        "forecast": false
+      },
+      {
+        "period": "2011",
+        "value": 1.7,
+        "forecast": false
+      },
+      {
+        "period": "2012",
+        "value": -1,
+        "forecast": false
+      },
+      {
+        "period": "2013",
+        "value": -0.2,
+        "forecast": false
+      },
+      {
+        "period": "2014",
+        "value": 1.4,
+        "forecast": false
+      },
+      {
+        "period": "2015",
+        "value": 2.1,
+        "forecast": false
+      },
+      {
+        "period": "2016",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2017",
+        "value": 2.6,
+        "forecast": false
+      },
+      {
+        "period": "2018",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2019",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2020",
+        "value": -6,
+        "forecast": false
+      },
+      {
+        "period": "2021",
+        "value": 6.4,
+        "forecast": false
+      },
+      {
+        "period": "2022",
+        "value": 3.6,
+        "forecast": false
+      },
+      {
+        "period": "2023",
+        "value": 0.4,
+        "forecast": false
+      },
+      {
+        "period": "2024",
+        "value": 0.9,
+        "forecast": false
+      },
+      {
+        "period": "2025",
+        "value": 1.2,
+        "forecast": false
+      },
+      {
+        "period": "2026",
+        "value": 1.1,
+        "forecast": false
+      },
+      {
+        "period": "2027",
+        "value": 1.4,
+        "forecast": true
+      },
+      {
+        "period": "2028",
+        "value": 1.3,
+        "forecast": true
+      },
+      {
+        "period": "2029",
+        "value": 1.2,
+        "forecast": true
+      },
+      {
+        "period": "2030",
+        "value": 1.1,
+        "forecast": true
+      }
+    ],
+    "GBR": [
+      {
+        "period": "1980",
+        "value": -2.1,
+        "forecast": false
+      },
+      {
+        "period": "1981",
+        "value": -0.7,
+        "forecast": false
+      },
+      {
+        "period": "1982",
+        "value": 2,
+        "forecast": false
+      },
+      {
+        "period": "1983",
+        "value": 4.2,
+        "forecast": false
+      },
+      {
+        "period": "1984",
+        "value": 2.2,
+        "forecast": false
+      },
+      {
+        "period": "1985",
+        "value": 4.1,
+        "forecast": false
+      },
+      {
+        "period": "1986",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "1987",
+        "value": 5.4,
+        "forecast": false
+      },
+      {
+        "period": "1988",
+        "value": 5.4,
+        "forecast": false
+      },
+      {
+        "period": "1989",
+        "value": 2.4,
+        "forecast": false
+      },
+      {
+        "period": "1990",
+        "value": 0.6,
+        "forecast": false
+      },
+      {
+        "period": "1991",
+        "value": -1.4,
+        "forecast": false
+      },
+      {
+        "period": "1992",
+        "value": 0.2,
+        "forecast": false
+      },
+      {
+        "period": "1993",
+        "value": 2.3,
+        "forecast": false
+      },
+      {
+        "period": "1994",
+        "value": 3.4,
+        "forecast": false
+      },
+      {
+        "period": "1995",
+        "value": 2.4,
+        "forecast": false
+      },
+      {
+        "period": "1996",
+        "value": 2.6,
+        "forecast": false
+      },
+      {
+        "period": "1997",
+        "value": 4.9,
+        "forecast": false
+      },
+      {
+        "period": "1998",
+        "value": 3.4,
+        "forecast": false
+      },
+      {
+        "period": "1999",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "2000",
+        "value": 4.3,
+        "forecast": false
+      },
+      {
+        "period": "2001",
+        "value": 2.6,
+        "forecast": false
+      },
+      {
+        "period": "2002",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2003",
+        "value": 3.2,
+        "forecast": false
+      },
+      {
+        "period": "2004",
+        "value": 2.5,
+        "forecast": false
+      },
+      {
+        "period": "2005",
+        "value": 2.7,
+        "forecast": false
+      },
+      {
+        "period": "2006",
+        "value": 2.4,
+        "forecast": false
+      },
+      {
+        "period": "2007",
+        "value": 2.6,
+        "forecast": false
+      },
+      {
+        "period": "2008",
+        "value": -0.2,
+        "forecast": false
+      },
+      {
+        "period": "2009",
+        "value": -4.6,
+        "forecast": false
+      },
+      {
+        "period": "2010",
+        "value": 2.2,
+        "forecast": false
+      },
+      {
+        "period": "2011",
+        "value": 1.1,
+        "forecast": false
+      },
+      {
+        "period": "2012",
+        "value": 1.5,
+        "forecast": false
+      },
+      {
+        "period": "2013",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2014",
+        "value": 3.2,
+        "forecast": false
+      },
+      {
+        "period": "2015",
+        "value": 2.2,
+        "forecast": false
+      },
+      {
+        "period": "2016",
+        "value": 1.9,
+        "forecast": false
+      },
+      {
+        "period": "2017",
+        "value": 2.7,
+        "forecast": false
+      },
+      {
+        "period": "2018",
+        "value": 1.4,
+        "forecast": false
+      },
+      {
+        "period": "2019",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2020",
+        "value": -10.3,
+        "forecast": false
+      },
+      {
+        "period": "2021",
+        "value": 8.6,
+        "forecast": false
+      },
+      {
+        "period": "2022",
+        "value": 4.8,
+        "forecast": false
+      },
+      {
+        "period": "2023",
+        "value": 0.4,
+        "forecast": false
+      },
+      {
+        "period": "2024",
+        "value": 1.1,
+        "forecast": false
+      },
+      {
+        "period": "2025",
+        "value": 1.3,
+        "forecast": false
+      },
+      {
+        "period": "2026",
+        "value": 1.3,
+        "forecast": false
+      },
+      {
+        "period": "2027",
+        "value": 1.5,
+        "forecast": true
+      },
+      {
+        "period": "2028",
+        "value": 1.4,
+        "forecast": true
+      },
+      {
+        "period": "2029",
+        "value": 1.4,
+        "forecast": true
+      },
+      {
+        "period": "2030",
+        "value": 1.4,
+        "forecast": true
+      }
+    ],
+    "USA": [
+      {
+        "period": "1980",
+        "value": -0.3,
+        "forecast": false
+      },
+      {
+        "period": "1981",
+        "value": 2.5,
+        "forecast": false
+      },
+      {
+        "period": "1982",
+        "value": -1.8,
+        "forecast": false
+      },
+      {
+        "period": "1983",
+        "value": 4.6,
+        "forecast": false
+      },
+      {
+        "period": "1984",
+        "value": 7.2,
+        "forecast": false
+      },
+      {
+        "period": "1985",
+        "value": 4.2,
+        "forecast": false
+      },
+      {
+        "period": "1986",
+        "value": 3.5,
+        "forecast": false
+      },
+      {
+        "period": "1987",
+        "value": 3.5,
+        "forecast": false
+      },
+      {
+        "period": "1988",
+        "value": 4.2,
+        "forecast": false
+      },
+      {
+        "period": "1989",
+        "value": 3.7,
+        "forecast": false
+      },
+      {
+        "period": "1990",
+        "value": 1.9,
+        "forecast": false
+      },
+      {
+        "period": "1991",
+        "value": -0.1,
+        "forecast": false
+      },
+      {
+        "period": "1992",
+        "value": 3.5,
+        "forecast": false
+      },
+      {
+        "period": "1993",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "1994",
+        "value": 4,
+        "forecast": false
+      },
+      {
+        "period": "1995",
+        "value": 2.7,
+        "forecast": false
+      },
+      {
+        "period": "1996",
+        "value": 3.8,
+        "forecast": false
+      },
+      {
+        "period": "1997",
+        "value": 4.4,
+        "forecast": false
+      },
+      {
+        "period": "1998",
+        "value": 4.5,
+        "forecast": false
+      },
+      {
+        "period": "1999",
+        "value": 4.8,
+        "forecast": false
+      },
+      {
+        "period": "2000",
+        "value": 4.1,
+        "forecast": false
+      },
+      {
+        "period": "2001",
+        "value": 1,
+        "forecast": false
+      },
+      {
+        "period": "2002",
+        "value": 1.7,
+        "forecast": false
+      },
+      {
+        "period": "2003",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "2004",
+        "value": 3.8,
+        "forecast": false
+      },
+      {
+        "period": "2005",
+        "value": 3.5,
+        "forecast": false
+      },
+      {
+        "period": "2006",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "2007",
+        "value": 2,
+        "forecast": false
+      },
+      {
+        "period": "2008",
+        "value": 0.1,
+        "forecast": false
+      },
+      {
+        "period": "2009",
+        "value": -2.6,
+        "forecast": false
+      },
+      {
+        "period": "2010",
+        "value": 2.7,
+        "forecast": false
+      },
+      {
+        "period": "2011",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2012",
+        "value": 2.3,
+        "forecast": false
+      },
+      {
+        "period": "2013",
+        "value": 2.1,
+        "forecast": false
+      },
+      {
+        "period": "2014",
+        "value": 2.5,
+        "forecast": false
+      },
+      {
+        "period": "2015",
+        "value": 2.9,
+        "forecast": false
+      },
+      {
+        "period": "2016",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2017",
+        "value": 2.5,
+        "forecast": false
+      },
+      {
+        "period": "2018",
+        "value": 3,
+        "forecast": false
+      },
+      {
+        "period": "2019",
+        "value": 2.6,
+        "forecast": false
+      },
+      {
+        "period": "2020",
+        "value": -2.1,
+        "forecast": false
+      },
+      {
+        "period": "2021",
+        "value": 6.2,
+        "forecast": false
+      },
+      {
+        "period": "2022",
+        "value": 2.5,
+        "forecast": false
+      },
+      {
+        "period": "2023",
+        "value": 2.9,
+        "forecast": false
+      },
+      {
+        "period": "2024",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "2025",
+        "value": 2,
+        "forecast": false
+      },
+      {
+        "period": "2026",
+        "value": 2.1,
+        "forecast": false
+      },
+      {
+        "period": "2027",
+        "value": 2.1,
+        "forecast": true
+      },
+      {
+        "period": "2028",
+        "value": 2.1,
+        "forecast": true
+      },
+      {
+        "period": "2029",
+        "value": 1.9,
+        "forecast": true
+      },
+      {
+        "period": "2030",
+        "value": 1.8,
+        "forecast": true
+      }
+    ],
+    "ADVEC": [
+      {
+        "period": "1980",
+        "value": 1.3,
+        "forecast": false
+      },
+      {
+        "period": "1981",
+        "value": 2.3,
+        "forecast": false
+      },
+      {
+        "period": "1982",
+        "value": 0.2,
+        "forecast": false
+      },
+      {
+        "period": "1983",
+        "value": 3.2,
+        "forecast": false
+      },
+      {
+        "period": "1984",
+        "value": 4.8,
+        "forecast": false
+      },
+      {
+        "period": "1985",
+        "value": 3.7,
+        "forecast": false
+      },
+      {
+        "period": "1986",
+        "value": 3.3,
+        "forecast": false
+      },
+      {
+        "period": "1987",
+        "value": 3.8,
+        "forecast": false
+      },
+      {
+        "period": "1988",
+        "value": 4.7,
+        "forecast": false
+      },
+      {
+        "period": "1989",
+        "value": 4,
+        "forecast": false
+      },
+      {
+        "period": "1990",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "1991",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "1992",
+        "value": 2.2,
+        "forecast": false
+      },
+      {
+        "period": "1993",
+        "value": 1.3,
+        "forecast": false
+      },
+      {
+        "period": "1994",
+        "value": 3.4,
+        "forecast": false
+      },
+      {
+        "period": "1995",
+        "value": 2.9,
+        "forecast": false
+      },
+      {
+        "period": "1996",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "1997",
+        "value": 3.5,
+        "forecast": false
+      },
+      {
+        "period": "1998",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "1999",
+        "value": 3.6,
+        "forecast": false
+      },
+      {
+        "period": "2000",
+        "value": 4.2,
+        "forecast": false
+      },
+      {
+        "period": "2001",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2002",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2003",
+        "value": 2,
+        "forecast": false
+      },
+      {
+        "period": "2004",
+        "value": 3.3,
+        "forecast": false
+      },
+      {
+        "period": "2005",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "2006",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "2007",
+        "value": 2.8,
+        "forecast": false
+      },
+      {
+        "period": "2008",
+        "value": 0.3,
+        "forecast": false
+      },
+      {
+        "period": "2009",
+        "value": -3.4,
+        "forecast": false
+      },
+      {
+        "period": "2010",
+        "value": 3.1,
+        "forecast": false
+      },
+      {
+        "period": "2011",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2012",
+        "value": 1.2,
+        "forecast": false
+      },
+      {
+        "period": "2013",
+        "value": 1.5,
+        "forecast": false
+      },
+      {
+        "period": "2014",
+        "value": 2.1,
+        "forecast": false
+      },
+      {
+        "period": "2015",
+        "value": 2.4,
+        "forecast": false
+      },
+      {
+        "period": "2016",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2017",
+        "value": 2.6,
+        "forecast": false
+      },
+      {
+        "period": "2018",
+        "value": 2.3,
+        "forecast": false
+      },
+      {
+        "period": "2019",
+        "value": 1.9,
+        "forecast": false
+      },
+      {
+        "period": "2020",
+        "value": -3.9,
+        "forecast": false
+      },
+      {
+        "period": "2021",
+        "value": 6,
+        "forecast": false
+      },
+      {
+        "period": "2022",
+        "value": 3,
+        "forecast": false
+      },
+      {
+        "period": "2023",
+        "value": 1.7,
+        "forecast": false
+      },
+      {
+        "period": "2024",
+        "value": 1.8,
+        "forecast": false
+      },
+      {
+        "period": "2025",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2026",
+        "value": 1.6,
+        "forecast": false
+      },
+      {
+        "period": "2027",
+        "value": 1.7,
+        "forecast": true
+      },
+      {
+        "period": "2028",
+        "value": 1.7,
+        "forecast": true
+      },
+      {
+        "period": "2029",
+        "value": 1.6,
+        "forecast": true
+      },
+      {
+        "period": "2030",
+        "value": 1.5,
         "forecast": true
       }
     ]

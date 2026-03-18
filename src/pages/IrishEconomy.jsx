@@ -11,10 +11,14 @@ import {
   fetchUnemploymentRate,
   fetchYouthUnemployment,
   fetchHICPInflation,
+  fetchCoreInflation,
   fetchHousePriceIndex,
   fetchFiscalAsPercentGNI,
   fetchBondYields,
   fetchEuroAreaRates,
+  fetchBundSpread,
+  fetchEURGBP,
+  fetchEURUSD,
   fetchDebtServiceCosts,
   fetchDebtServiceAbsolute,
   fetchCurrentAccount,
@@ -42,9 +46,13 @@ export default function IrishEconomy() {
         unemployment: fetchUnemploymentRate,
         youthUnemployment: fetchYouthUnemployment,
         hicp: fetchHICPInflation,
+        coreInflation: fetchCoreInflation,
         housePrices: fetchHousePriceIndex,
         bondYields: fetchBondYields,
         euroAreaRates: fetchEuroAreaRates,
+        bundSpread: fetchBundSpread,
+        eurGbp: fetchEURGBP,
+        eurUsd: fetchEURUSD,
         debtService: fetchDebtServiceCosts,
         debtServiceAbs: fetchDebtServiceAbsolute,
         currentAccount: fetchCurrentAccount,
@@ -351,8 +359,19 @@ function EmploymentTab({ errors, loading, latest, slice, data }) {
   )
 }
 
-function PricesTab({ errors, loading, latest, slice }) {
+function PricesTab({ data, errors, loading, latest, slice }) {
   const hicp = latest('hicp')
+  const core = latest('coreInflation')
+
+  // Merge headline + core for overlay chart
+  const hicpData = data.hicp || []
+  const coreData = data.coreInflation || []
+  const coreMap = new Map(coreData.map(d => [d.period, d.value]))
+  const inflationMerged = hicpData.slice(-36).map(d => ({
+    period: d.period,
+    headline: d.value,
+    core: coreMap.get(d.period) ?? null,
+  }))
 
   return (
     <div className="space-y-6">
@@ -365,21 +384,32 @@ function PricesTab({ errors, loading, latest, slice }) {
           color="rose"
           loading={loading}
         />
+        <KpiCard
+          title="Core Inflation"
+          value={core ? `${core.value}%` : '\u2014'}
+          subtitle={core ? `${core.period} \u00b7 excl. energy & food` : errors.coreInflation ? 'Unavailable' : 'Loading\u2026'}
+          icon={DollarSign}
+          color="amber"
+          loading={loading}
+        />
       </div>
 
       <ChartCard
-        title="HICP Annual Rate of Change (%, monthly)"
-        subtitle="Source: Eurostat prc_hicp_manr"
+        title="Inflation: Headline vs Core (%, monthly)"
+        subtitle="Source: Eurostat prc_hicp_manr — All items vs excl. energy & unprocessed food"
         loading={loading}
         error={errors.hicp}
+        data={inflationMerged}
       >
-        <LineChart data={slice('hicp', 36)}>
+        <LineChart data={inflationMerged}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
           <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
           <Tooltip />
+          <Legend />
           <ReferenceLine y={2} stroke="#ef4444" strokeDasharray="5 5" label={{ value: 'ECB 2% target', position: 'right', fontSize: 10, fill: '#ef4444' }} />
-          <Line type="monotone" dataKey="value" name="HICP" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 2 }} />
+          <Line type="monotone" dataKey="headline" name="All Items (HICP)" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 2 }} />
+          <Line type="monotone" dataKey="core" name="Core (excl. energy & food)" stroke={CHART_COLORS[4]} strokeWidth={2} dot={{ r: 2 }} connectNulls />
         </LineChart>
       </ChartCard>
     </div>
@@ -599,11 +629,15 @@ function FiscalTab({ errors, loading, latest, slice, data }) {
 function RatesTab({ errors, loading, latest, slice, data }) {
   const bondYield = latest('bondYields')
   const euroRate = latest('euroAreaRates')
+  const spread = latest('bundSpread')
+  const eurGbp = latest('eurGbp')
+  const eurUsd = latest('eurUsd')
 
-  // Merge bond yields and euro area rates by period
+  // Merge bond yields, euro area rates, and bund spread
   const ratesMerged = (() => {
     const bData = data.bondYields || []
     const eData = data.euroAreaRates || []
+    const sData = data.bundSpread || []
     const map = new Map()
     bData.forEach((d) => map.set(d.period, { period: d.period, bondYield: d.value }))
     eData.forEach((d) => {
@@ -611,14 +645,35 @@ function RatesTab({ errors, loading, latest, slice, data }) {
       existing.euroRate = d.value
       map.set(d.period, existing)
     })
+    sData.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.spread = d.value
+      map.set(d.period, existing)
+    })
     return Array.from(map.values())
       .sort((a, b) => (a.period < b.period ? -1 : 1))
       .slice(-60)
   })()
 
+  // Merge exchange rates
+  const fxMerged = (() => {
+    const gbpData = data.eurGbp || []
+    const usdData = data.eurUsd || []
+    const map = new Map()
+    gbpData.forEach((d) => map.set(d.period, { period: d.period, eurGbp: d.value }))
+    usdData.forEach((d) => {
+      const existing = map.get(d.period) || { period: d.period }
+      existing.eurUsd = d.value
+      map.set(d.period, existing)
+    })
+    return Array.from(map.values())
+      .sort((a, b) => (a.period < b.period ? -1 : 1))
+      .slice(-36)
+  })()
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="10Y Bond Yield"
           value={bondYield ? `${bondYield.value}%` : '\u2014'}
@@ -628,11 +683,27 @@ function RatesTab({ errors, loading, latest, slice, data }) {
           loading={loading}
         />
         <KpiCard
-          title="Euro 3M Rate"
-          value={euroRate ? `${euroRate.value}%` : '\u2014'}
-          subtitle={euroRate ? `${euroRate.period} \u00b7 Eurostat (Euro Area)` : errors.euroAreaRates ? 'Unavailable' : 'Loading\u2026'}
+          title="Spread to Bund"
+          value={spread ? `${spread.value} pp` : '\u2014'}
+          subtitle={spread ? `${spread.period} \u00b7 IE minus DE` : errors.bundSpread ? 'Unavailable' : 'Loading\u2026'}
+          icon={ArrowUpDown}
+          color="slate"
+          loading={loading}
+        />
+        <KpiCard
+          title="EUR/GBP"
+          value={eurGbp ? `\u00a3${eurGbp.value}` : '\u2014'}
+          subtitle={eurGbp ? `${eurGbp.period} \u00b7 Eurostat` : errors.eurGbp ? 'Unavailable' : 'Loading\u2026'}
           icon={Banknote}
-          color="amber"
+          color="green"
+          loading={loading}
+        />
+        <KpiCard
+          title="EUR/USD"
+          value={eurUsd ? `$${eurUsd.value}` : '\u2014'}
+          subtitle={eurUsd ? `${eurUsd.period} \u00b7 Eurostat` : errors.eurUsd ? 'Unavailable' : 'Loading\u2026'}
+          icon={Banknote}
+          color="sky"
           loading={loading}
         />
       </div>
@@ -642,26 +713,18 @@ function RatesTab({ errors, loading, latest, slice, data }) {
           <Info className="h-5 w-5 text-sky-600 mt-0.5 shrink-0" />
           <p className="text-sm text-sky-800">
             The 10-year bond yield is the EMU convergence criterion rate for Ireland.
-            The 3-month rate tracks the Euro area money market rate, which closely follows
-            the ECB&apos;s main refinancing operations rate. Mortgage rates for Ireland are
-            published by the{' '}
-            <a
-              href="https://www.centralbank.ie/statistics/interest-rates-exchange-rates/interest-rates"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium underline"
-            >
-              Central Bank of Ireland
-            </a>.
+            The spread to Bund (German 10yr) reflects Irish sovereign risk premium.
+            EUR/GBP above \u00a30.90 is seen as a critical point for Ireland-UK trade.
           </p>
         </CardContent>
       </Card>
 
       <ChartCard
-        title="Irish 10Y Bond Yield & Euro 3M Rate (%, monthly)"
+        title="Bond Yield, Bund Spread & Euro 3M Rate (%, monthly)"
         subtitle="Source: Eurostat irt_lt_mcby_m, irt_st_m"
         loading={loading}
         error={errors.bondYields && errors.euroAreaRates ? errors.bondYields : undefined}
+        data={ratesMerged}
       >
         <LineChart data={ratesMerged}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -671,6 +734,26 @@ function RatesTab({ errors, loading, latest, slice, data }) {
           <Legend />
           <Line type="monotone" dataKey="bondYield" name="IE 10Y Bond" stroke={CHART_COLORS[3]} strokeWidth={2} dot={{ r: 2 }} />
           <Line type="monotone" dataKey="euroRate" name="Euro 3M Rate" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 2 }} />
+          <Line type="monotone" dataKey="spread" name="Spread to Bund" stroke={CHART_COLORS[5]} strokeWidth={2} dot={{ r: 2 }} connectNulls />
+        </LineChart>
+      </ChartCard>
+
+      <ChartCard
+        title="Exchange Rates (monthly average)"
+        subtitle="Source: Eurostat ert_bil_eur_m"
+        loading={loading}
+        error={errors.eurGbp && errors.eurUsd ? 'Exchange rate data unavailable' : undefined}
+        data={fxMerged}
+      >
+        <LineChart data={fxMerged}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="period" tick={{ fontSize: 10 }} stroke="#94a3b8" angle={-45} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Legend />
+          <ReferenceLine y={0.9} stroke="#ef4444" strokeDasharray="5 5" label={{ value: '\u00a30.90', position: 'left', fontSize: 10, fill: '#ef4444' }} />
+          <Line type="monotone" dataKey="eurGbp" name="EUR/GBP" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 2 }} />
+          <Line type="monotone" dataKey="eurUsd" name="EUR/USD" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 2 }} />
         </LineChart>
       </ChartCard>
     </div>

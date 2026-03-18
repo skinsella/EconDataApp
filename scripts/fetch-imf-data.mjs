@@ -29,14 +29,18 @@ const INDICATORS = {
   BCA_NGDPD: 'Current Account',
 }
 
-async function fetchIndicator(code) {
-  const url = `${BASE_URL}/${code}/${COUNTRY}`
-  console.log(`  Fetching ${code} ...`)
+// Countries/aggregates for global GDP growth comparison
+const GLOBAL_GROWTH_COUNTRIES = ['CHN', 'EURO', 'GBR', 'USA', 'ADVEC']
+const GLOBAL_GROWTH_INDICATOR = 'NGDP_RPCH'
+
+async function fetchIndicator(code, country = COUNTRY) {
+  const url = `${BASE_URL}/${code}/${country}`
+  console.log(`  Fetching ${code} for ${country} ...`)
   const res = await fetch(url)
-  if (!res.ok) throw new Error(`${code}: HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`${code}/${country}: HTTP ${res.status}`)
   const json = await res.json()
-  const yearData = json?.values?.[code]?.[COUNTRY]
-  if (!yearData) throw new Error(`${code}: no data in response`)
+  const yearData = json?.values?.[code]?.[country]
+  if (!yearData) throw new Error(`${code}/${country}: no data in response`)
   return yearData
 }
 
@@ -64,12 +68,35 @@ async function main() {
     }
   }
 
+  // Fetch global GDP growth comparison data
+  console.log('\nFetching global GDP growth comparison data...')
+  const globalGrowth = {}
+
+  for (const countryCode of GLOBAL_GROWTH_COUNTRIES) {
+    try {
+      const yearData = await fetchIndicator(GLOBAL_GROWTH_INDICATOR, countryCode)
+      globalGrowth[countryCode] = Object.entries(yearData)
+        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+        .map(([year, value]) => ({
+          period: year,
+          value: Math.round(value * 100) / 100,
+          forecast: parseInt(year) > currentYear,
+        }))
+        .sort((a, b) => (a.period < b.period ? -1 : 1))
+      console.log(`  ✓ ${countryCode}: ${globalGrowth[countryCode].length} data points`)
+    } catch (e) {
+      console.error(`  ✗ ${countryCode}: ${e.message}`)
+      globalGrowth[countryCode] = []
+    }
+  }
+
   mkdirSync(OUT_DIR, { recursive: true })
 
   const output = {
     fetchedAt: new Date().toISOString(),
     country: COUNTRY,
     indicators: result,
+    globalGrowth,
   }
 
   writeFileSync(OUT_FILE, JSON.stringify(output, null, 2))

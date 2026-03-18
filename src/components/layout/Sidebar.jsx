@@ -14,10 +14,12 @@ import {
   Building,
   Eye,
   Smile,
+  TableProperties,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Heatmap', path: '/heatmap', icon: TableProperties },
   { name: 'Economic Overview', path: '/irish-economy', icon: TrendingUp },
   { name: 'Outlook & Forecasts', path: '/outlook', icon: Eye },
   { name: 'Confidence', path: '/confidence', icon: Smile },

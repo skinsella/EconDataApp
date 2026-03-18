@@ -46,6 +46,34 @@ export async function fetchIMFMultiple(indicators, country = 'IRL') {
   return out
 }
 
+/**
+ * Get global GDP growth comparison data.
+ * Returns an object keyed by country code (CHN, EURO, GBR, USA, WORLD).
+ */
+export async function fetchGlobalGrowth() {
+  const url = `${import.meta.env.BASE_URL}data/imf-weo.json`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Failed to load IMF data: ${res.status}`)
+  const json = await res.json()
+  return json.globalGrowth || {}
+}
+
+export const GLOBAL_GROWTH_LABELS = {
+  CHN: 'China',
+  EURO: 'Euro Area',
+  GBR: 'United Kingdom',
+  USA: 'United States',
+  ADVEC: 'Advanced Economies',
+}
+
+export const GLOBAL_GROWTH_COLORS = {
+  CHN: '#f59e0b',
+  EURO: '#3b82f6',
+  GBR: '#10b981',
+  USA: '#6366f1',
+  ADVEC: '#94a3b8',
+}
+
 // WEO indicator codes
 export const IMF_INDICATORS = {
   GDP_GROWTH: 'NGDP_RPCH',
