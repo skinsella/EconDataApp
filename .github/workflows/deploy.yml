@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    # Rebuild every Monday at 6am UTC to refresh IMF + Eurostat data
+    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 permissions:
