@@ -15,6 +15,7 @@ import {
   Eye,
   Smile,
   TableProperties,
+  Zap,
 } from 'lucide-react'
 
 const navigation = [
@@ -31,6 +32,7 @@ const navigation = [
   { name: 'Housing Reports', path: '/housing', icon: HomeIcon },
   { name: 'CSO Releases', path: '/cso-releases', icon: ClipboardList },
   { name: 'Days Until', path: '/days-until', icon: Calendar },
+  { name: 'Energy Tracker', path: '/energy-tracker', icon: Zap },
   { name: 'Data Sources', path: '/data-sources', icon: Database },
 ]
 
