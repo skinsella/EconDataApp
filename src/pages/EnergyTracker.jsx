@@ -19,7 +19,7 @@ import {
   getMeasuresByCountry,
 } from '@/lib/energyPolicyData'
 
-const REGION_FILTERS = ['EU', 'Non-EU', 'All']
+const REGION_FILTERS = ['EU', 'EU-level', 'Non-EU', 'All']
 const CATEGORY_FILTERS = [
   { id: 'all',          label: 'All categories' },
   { id: 'conservation', label: 'Conservation' },
@@ -105,7 +105,12 @@ export default function EnergyTracker() {
   const filteredCountries = useMemo(() => {
     const q = search.trim().toLowerCase()
     return COUNTRIES
-      .filter(c => region === 'All' ? true : c.region === region)
+      .filter(c => {
+        if (region === 'All') return true
+        // 'EU' filter shows both EU member states and the EU-wide pseudo-entry.
+        if (region === 'EU') return c.region === 'EU' || c.region === 'EU-level'
+        return c.region === region
+      })
       .filter(c => !q || c.name.toLowerCase().includes(q))
       .map(c => {
         let measures = getMeasuresByCountry(c.iso)
@@ -137,7 +142,7 @@ export default function EnergyTracker() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Energy Crisis Policy Response Tracker</h1>
           <p className="text-slate-500 mt-1">
-            Government measures to address the energy crisis. EU-27 prioritised, with selected non-EU comparators.
+            Government measures in force in 2026. EU-level + EU-27 prioritised, with UK / Norway / Switzerland comparators.
           </p>
         </div>
         <button
@@ -155,13 +160,15 @@ export default function EnergyTracker() {
           <Info className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
           <div className="text-sm text-emerald-900 space-y-1">
             <p>
-              Inspired by the IEA <em>Energy Crisis Policy Response Tracker</em>. Measures are grouped into two pillars
-              following the IEA template: <strong>Energy Conservation</strong> and <strong>Consumer Support</strong>.
+              Inspired by the IEA <em>Energy Crisis Policy Response Tracker</em> (last IEA update 14 April 2026). Measures
+              are grouped into two pillars: <strong>Energy Conservation</strong> and <strong>Consumer Support</strong>.
+              Most acute-crisis (2022-23) electricity and gas price caps have expired; surviving measures cluster around
+              fuel taxation, retail-margin discipline and targeted support for vulnerable households and specific sectors.
             </p>
             <p>
-              Each entry links to a primary government or EU-institution source for verification. The seed dataset is
-              non-exhaustive — extend <code className="bg-emerald-100 px-1 rounded">src/lib/energyPolicyData.js</code> to add measures.
-              Statuses (<em>active / extended / expired / announced</em>) should be reviewed against the linked source before citing.
+              Each entry links to a primary government, EU-institution or IEA source for verification. Extend
+              <code className="bg-emerald-100 px-1 rounded">src/lib/energyPolicyData.js</code> to add measures. Statuses
+              (<em>active / extended / expired / announced</em>) should be re-checked against the linked source before citing.
             </p>
           </div>
         </CardContent>

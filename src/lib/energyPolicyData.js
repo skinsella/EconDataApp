@@ -1,18 +1,25 @@
 // ──────────────────────────────────────────────────────────────────────
-// Energy Crisis Policy Response Tracker
+// Energy Crisis Policy Response Tracker — 2026 picture
 //
-// Inspired by the IEA "Energy Crisis Policy Response Tracker".
-// Coverage prioritises EU-27 member states with selected non-EU
-// comparators (UK, Norway, Switzerland) at the bottom.
+// Inspired by the IEA "Energy Crisis Policy Response Tracker"
+// (last IEA update: 14 April 2026). Coverage prioritises EU-27 plus
+// selected non-EU comparators.
 //
-// Data here should be treated as a SEED set. Each measure carries a
-// `source_url` pointing to a primary government / EU institution page
-// for verification. Extend by adding entries to the `measures` array
-// for each country.
+// Notes on the 2026 landscape:
+//   • Most acute-crisis (2022-23) electricity / gas price caps have
+//     expired. Several have been replaced by structural reforms or
+//     more narrowly targeted instruments.
+//   • The IEA April-2026 tracker shows that surviving measures cluster
+//     around road-fuel taxation, fuel-station price discipline and
+//     targeted support for vulnerable households / specific sectors
+//     (transport, agriculture, fisheries).
+//   • EU-level action in Q1 2026 has been dominated by the Citizens
+//     Energy Package, the Affordable Energy Action Plan follow-through
+//     and the launch of the Social Climate Fund.
 //
-// Categories follow the IEA two-pillar split:
-//   1. Energy Conservation Measures
-//   2. Consumer Support Measures
+// Each entry below carries a `source_url` to a primary government, EU
+// institution or major broadcaster page. Statuses should be re-checked
+// against the linked source before citation.
 // ──────────────────────────────────────────────────────────────────────
 
 export const POLICY_CATEGORIES = {
@@ -43,22 +50,23 @@ export const POLICY_CATEGORIES = {
       { id: 'business_grant',  label: 'Business / industry support' },
       { id: 'vulnerable',      label: 'Targeted vulnerable households' },
       { id: 'windfall_tax',    label: 'Windfall / solidarity levy' },
+      { id: 'fuel_margin',     label: 'Retail fuel margin caps' },
+      { id: 'network_fees',    label: 'Network / grid fee subsidies' },
     ],
   },
 }
 
 // Helper for status badges on individual measures
 export const POLICY_STATUS = {
-  active:    { label: 'Active',    bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  expired:   { label: 'Expired',   bg: 'bg-slate-100',   text: 'text-slate-700' },
-  announced: { label: 'Announced', bg: 'bg-amber-100',   text: 'text-amber-800' },
-  extended:  { label: 'Extended',  bg: 'bg-indigo-100',  text: 'text-indigo-800' },
+  active:    { label: 'Active in 2026',  bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  expired:   { label: 'Expired',         bg: 'bg-slate-100',   text: 'text-slate-700' },
+  announced: { label: 'Announced',       bg: 'bg-amber-100',   text: 'text-amber-800' },
+  extended:  { label: 'Extended into 2026', bg: 'bg-indigo-100', text: 'text-indigo-800' },
 }
 
-// EU-27 plus comparators. Order: EU first (alpha), then non-EU.
-// `seed` flags whether we have any populated measures; the UI uses this
-// to highlight scaffolded-but-empty rows.
+// EU-level pseudo-country plus EU-27 plus comparators.
 export const COUNTRIES = [
+  { iso: 'EU', name: 'European Union (EU-wide)', region: 'EU-level' },
   { iso: 'AT', name: 'Austria',        region: 'EU' },
   { iso: 'BE', name: 'Belgium',        region: 'EU' },
   { iso: 'BG', name: 'Bulgaria',       region: 'EU' },
@@ -93,166 +101,184 @@ export const COUNTRIES = [
 ]
 
 // ──────────────────────────────────────────────────────────────────────
-// MEASURES
-//
-// Schema:
-//   country:      ISO-2 (matches COUNTRIES)
-//   category:     'conservation' | 'support'
-//   subcategory:  one of the ids in POLICY_CATEGORIES[*].subcategories
-//   title:        short headline of the measure
-//   description:  1-3 sentences, factual and neutral
-//   announced:    YYYY-MM-DD (announcement / first effective date)
-//   status:       'active' | 'expired' | 'announced' | 'extended'
-//   source_url:   primary government or EU institution page
-//   source_label: short label shown on the link
-//
-// NOTE: Seed entries below are limited to measures that are widely
-// documented in primary sources. Extend cautiously — verify before
-// adding details that could be wrong (cap levels, exact end dates).
+// MEASURES (2026)
+// All entries below describe measures either adopted in 2026 or still
+// in force in 2026. Verified against IEA tracker (Apr 2026), European
+// Commission affordable-energy actions list, national budget documents
+// and ministry pages.
 // ──────────────────────────────────────────────────────────────────────
 export const MEASURES = [
-  // ── EU-level (cross-cutting framework) ─────────────────────────────
-  // Tagged as 'EU' country so it can be filtered separately in the UI.
-  // ────────────────────────────────────────────────────────────────────
-
-  // ── Ireland ────────────────────────────────────────────────────────
+  // ── EU level ───────────────────────────────────────────────────────
   {
-    country: 'IE',
+    country: 'EU',
     category: 'support',
     subcategory: 'household_grant',
-    title: 'Electricity Costs Emergency Benefit Scheme',
-    description: 'Universal credits applied to all domestic electricity accounts across successive winters since 2022, administered via electricity suppliers.',
-    announced: '2022-02-10',
-    status: 'extended',
-    source_url: 'https://www.gov.ie/en/publication/electricity-costs-emergency-benefit-scheme/',
-    source_label: 'gov.ie',
+    title: 'Citizens Energy Package',
+    description: 'Commission package adopted on 10 March 2026 setting out concrete actions to lower energy bills for households, protect and empower consumers and tackle energy poverty.',
+    announced: '2026-03-10',
+    status: 'active',
+    source_url: 'https://energy.ec.europa.eu/news/commission-boost-access-affordable-and-clean-energy-all-europeans-2026-03-10_en',
+    source_label: 'energy.ec.europa.eu',
   },
+  {
+    country: 'EU',
+    category: 'support',
+    subcategory: 'vulnerable',
+    title: 'Social Climate Fund (operational from 2026)',
+    description: '€86.7 billion EU fund supporting vulnerable households and micro-enterprises with building renovations, zero-emission heating/cooling and direct income support to offset ETS2 costs.',
+    announced: '2026-01-01',
+    status: 'active',
+    source_url: 'https://climate.ec.europa.eu/eu-action/social-climate-fund_en',
+    source_label: 'climate.ec.europa.eu',
+  },
+  {
+    country: 'EU',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Recommendation: lower national electricity taxes',
+    description: 'Commission follow-up to the Affordable Energy Action Plan recommending Member States reduce national electricity taxes and review network charges to lower household and industrial bills.',
+    announced: '2026-02-17',
+    status: 'active',
+    source_url: 'https://energy.ec.europa.eu/strategy/affordable-energy/actions-supporting-affordable-energy_en',
+    source_label: 'energy.ec.europa.eu',
+  },
+  {
+    country: 'EU',
+    category: 'support',
+    subcategory: 'business_grant',
+    title: 'Clean Energy Investment Strategy',
+    description: 'Adopted 10 March 2026 to mobilise private capital towards Europe\'s pipeline of energy projects, lowering long-run system costs.',
+    announced: '2026-03-10',
+    status: 'active',
+    source_url: 'https://energy.ec.europa.eu/topics/markets-and-consumers/clean-energy-investment-strategy_en',
+    source_label: 'energy.ec.europa.eu',
+  },
+
+  // ── Ireland (Budget 2026, announced 7 Oct 2025; effective 2026) ────
   {
     country: 'IE',
     category: 'support',
     subcategory: 'tax_cuts',
-    title: 'Reduced VAT on gas and electricity (9%)',
-    description: 'VAT rate on supply of gas and electricity reduced from 13.5% to 9%, repeatedly extended in subsequent finance bills.',
-    announced: '2022-05-01',
+    title: 'VAT 9% on gas and electricity extended to end-2030',
+    description: 'Budget 2026 extended the reduced 9% VAT rate on domestic gas and electricity supply for a further five years. Estimated annual saving of about €53 on a typical household electricity bill.',
+    announced: '2025-10-07',
     status: 'extended',
-    source_url: 'https://www.revenue.ie/en/vat/vat-rates/',
-    source_label: 'revenue.ie',
+    source_url: 'https://www.gov.ie/en/publication/budget-2026/',
+    source_label: 'gov.ie',
   },
   {
     country: 'IE',
     category: 'support',
     subcategory: 'vulnerable',
-    title: 'Fuel Allowance enhancement',
-    description: 'Lump-sum top-ups and widened eligibility for the Fuel Allowance announced in successive budgets to support low-income households.',
-    announced: '2022-09-27',
-    status: 'extended',
+    title: 'Fuel Allowance increase + widened eligibility',
+    description: 'Weekly Fuel Allowance raised from €33 to €38 (first increase in four years) and eligibility widened to recipients of the Working Family Payment, bringing ~50,000 additional households into the scheme.',
+    announced: '2025-10-07',
+    status: 'active',
     source_url: 'https://www.gov.ie/en/service/00aa38-fuel-allowance/',
     source_label: 'gov.ie',
   },
+  {
+    country: 'IE',
+    category: 'support',
+    subcategory: 'household_grant',
+    title: 'No universal electricity credits in 2026',
+    description: 'Government confirmed no broad cost-of-living package and no further universal Electricity Costs Emergency Benefit credits for 2026; the scheme that paid €450 in 2024-25 has now lapsed.',
+    announced: '2025-10-07',
+    status: 'expired',
+    source_url: 'https://www.rte.ie/news/budget-2026/2025/1007/1537074-budget-2026-energy-fuel-excise-duty/',
+    source_label: 'rte.ie',
+  },
+  {
+    country: 'IE',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Fuel excise: petrol/diesel +2.5c, NORA levy reduced',
+    description: 'Budget 2026 raised excise on petrol and diesel by 2.5c per litre while reducing the NORA (oil reserves) levy. Targeted support for transport, fishing and agriculture sectors retained.',
+    announced: '2025-10-07',
+    status: 'active',
+    source_url: 'https://www.rte.ie/news/budget-2026/2025/1007/1537074-budget-2026-energy-fuel-excise-duty/',
+    source_label: 'rte.ie',
+  },
+  {
+    country: 'IE',
+    category: 'support',
+    subcategory: 'vulnerable',
+    title: 'Targeted energy supports for pensioners, carers and disabled',
+    description: 'Budget 2026 retained and extended targeted lump-sum energy supports for pensioners, carers and people with disabilities in lieu of universal credits.',
+    announced: '2025-10-07',
+    status: 'active',
+    source_url: 'https://www.gov.ie/en/publication/budget-2026/',
+    source_label: 'gov.ie',
+  },
 
-  // ── Germany ────────────────────────────────────────────────────────
+  // ── Germany (effective 1 Jan 2026) ──────────────────────────────────
   {
     country: 'DE',
     category: 'support',
-    subcategory: 'price_caps',
-    title: 'Strompreisbremse (Electricity price brake)',
-    description: 'Cap on the working price of electricity for a baseline share of prior consumption for households and SMEs; surcharge above the cap.',
-    announced: '2022-12-15',
-    status: 'expired',
-    source_url: 'https://www.bundesregierung.de/breg-de/themen/entlastung-fuer-deutschland/strompreisbremse-2125202',
+    subcategory: 'network_fees',
+    title: 'Transmission grid fee subsidy (€6.5bn in 2026)',
+    description: 'Federal subsidy of €6.5 billion lowering transmission grid charges for all electricity consumers from 1 January 2026, applied through reduced Übertragungsnetzentgelte.',
+    announced: '2025-12-12',
+    status: 'active',
+    source_url: 'https://www.bundesregierung.de/breg-en/news/reduction-in-energy-prices-2358994',
     source_label: 'bundesregierung.de',
   },
   {
     country: 'DE',
     category: 'support',
-    subcategory: 'price_caps',
-    title: 'Gaspreisbremse (Gas price brake)',
-    description: 'Capped price for natural gas and district heating on a baseline share of prior consumption; difference funded from the federal Wirtschaftsstabilisierungsfonds.',
-    announced: '2022-12-15',
-    status: 'expired',
-    source_url: 'https://www.bundesregierung.de/breg-de/themen/entlastung-fuer-deutschland/gaspreisbremse-2125198',
+    subcategory: 'tax_cuts',
+    title: 'Permanent electricity-tax reduction (Stromsteuer)',
+    description: 'Permanent reduction in the electricity tax for manufacturing, agriculture and forestry from 1 January 2026, worth roughly €3 billion per year. Domestic consumers benefit indirectly via lower industrial costs.',
+    announced: '2026-01-01',
+    status: 'active',
+    source_url: 'https://www.bundesregierung.de/breg-en/news/reduction-in-energy-prices-2358994',
     source_label: 'bundesregierung.de',
   },
   {
     country: 'DE',
-    category: 'conservation',
-    subcategory: 'public_buildings',
-    title: 'EnSikuMaV: heating limits in public buildings',
-    description: 'Short-term energy savings ordinance capping heating in public office buildings at 19°C, banning heating of corridors/foyers and restricting illuminated advertising.',
-    announced: '2022-09-01',
-    status: 'expired',
-    source_url: 'https://www.gesetze-im-internet.de/ensikumav/',
-    source_label: 'gesetze-im-internet.de',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Gas-storage levy abolished',
+    description: 'Gasspeicherumlage abolished with effect from 1 January 2026, removing roughly €0.0099/kWh from gas bills and lowering wholesale gas costs across the German market.',
+    announced: '2026-01-01',
+    status: 'active',
+    source_url: 'https://www.bundesregierung.de/breg-en/news/reduction-in-energy-prices-2358994',
+    source_label: 'bundesregierung.de',
+  },
+  {
+    country: 'DE',
+    category: 'support',
+    subcategory: 'fuel_margin',
+    title: 'Daily fuel-price change cap',
+    description: 'Per IEA tracker (Apr 2026): rule limiting fuel stations to one gasoline and diesel price increase per day, retained alongside earlier petrol/diesel tax cuts and a tax-free employer commuting bonus.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
   // ── France ─────────────────────────────────────────────────────────
   {
     country: 'FR',
     category: 'support',
-    subcategory: 'price_caps',
-    title: 'Bouclier tarifaire (Tariff shield)',
-    description: 'Caps annual increases in regulated gas and electricity tariffs for households; cost borne by the state budget. Phased down from 2024.',
-    announced: '2021-09-30',
-    status: 'extended',
-    source_url: 'https://www.economie.gouv.fr/particuliers/bouclier-tarifaire',
-    source_label: 'economie.gouv.fr',
+    subcategory: 'business_grant',
+    title: 'Targeted support for transport, fishing and agriculture',
+    description: 'Per IEA tracker (Apr 2026): France maintains targeted, time-limited support for energy-intensive transport, fishing and agriculture sectors; broad household price-shield measures have wound down.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
   {
     country: 'FR',
     category: 'support',
     subcategory: 'household_grant',
-    title: 'Chèque énergie',
-    description: 'Means-tested annual energy voucher posted to eligible households, used to pay energy bills or fund retrofit works.',
-    announced: '2018-01-01',
+    title: 'Chèque énergie (annual)',
+    description: 'Means-tested annual energy voucher continues in 2026 (typical value €48-€277) for ~5.6 million eligible households; can be used for energy bills or retrofit works.',
+    announced: '2026-01-01',
     status: 'active',
     source_url: 'https://chequeenergie.gouv.fr/',
     source_label: 'chequeenergie.gouv.fr',
-  },
-  {
-    country: 'FR',
-    category: 'conservation',
-    subcategory: 'campaigns',
-    title: 'Plan de sobriété énergétique',
-    description: 'National energy-sobriety plan with sectoral targets, public-building 19°C heating limit, lighting curfews and an "EcoWatt" demand-signal app.',
-    announced: '2022-10-06',
-    status: 'active',
-    source_url: 'https://www.ecologie.gouv.fr/plan-sobriete-energetique',
-    source_label: 'ecologie.gouv.fr',
-  },
-
-  // ── Spain ──────────────────────────────────────────────────────────
-  {
-    country: 'ES',
-    category: 'support',
-    subcategory: 'price_caps',
-    title: 'Iberian exception (gas-price cap on power)',
-    description: 'Joint Spain-Portugal mechanism capping the price of gas used for electricity generation in the wholesale market, lowering the marginal clearing price.',
-    announced: '2022-06-14',
-    status: 'expired',
-    source_url: 'https://www.miteco.gob.es/es/prensa/ultimas-noticias/2022/06/excepcion-iberica.aspx',
-    source_label: 'miteco.gob.es',
-  },
-  {
-    country: 'ES',
-    category: 'support',
-    subcategory: 'tax_cuts',
-    title: 'Reduced VAT on electricity and gas',
-    description: 'VAT on electricity supply reduced (initially to 5%) and on natural gas to 5%, with subsequent gradual reversion as wholesale prices fell.',
-    announced: '2021-06-26',
-    status: 'expired',
-    source_url: 'https://www.boe.es/buscar/act.php?id=BOE-A-2021-10523',
-    source_label: 'boe.es',
-  },
-  {
-    country: 'ES',
-    category: 'conservation',
-    subcategory: 'cooling_limits',
-    title: 'RD-Ley 14/2022: A/C and heating limits',
-    description: 'Royal Decree-Law setting cooling no lower than 27°C and heating no higher than 19°C in workplaces, shops, hotels and transport hubs, plus illuminated-window switch-off after 22:00.',
-    announced: '2022-08-01',
-    status: 'expired',
-    source_url: 'https://www.boe.es/buscar/act.php?id=BOE-A-2022-12925',
-    source_label: 'boe.es',
   },
 
   // ── Italy ──────────────────────────────────────────────────────────
@@ -260,121 +286,173 @@ export const MEASURES = [
     country: 'IT',
     category: 'support',
     subcategory: 'vulnerable',
-    title: 'Bonus sociale elettrico e gas',
-    description: 'Automatic discount on electricity and gas bills for low-income households (ISEE threshold), with thresholds raised during the crisis.',
-    announced: '2021-09-27',
+    title: 'Decreto Bollette — €200 contribution for low-income households',
+    description: 'Decree-Law 28 February 2025, n. 19 ("Decreto Bollette") provided a one-off €200 extraordinary contribution to families in poor economic conditions; effects continued into early 2026 alongside the standard ARERA bonus sociale.',
+    announced: '2025-02-28',
     status: 'extended',
+    source_url: 'https://www.gazzettaufficiale.it/eli/id/2025/02/28/25G00027/sg',
+    source_label: 'gazzettaufficiale.it',
+  },
+  {
+    country: 'IT',
+    category: 'support',
+    subcategory: 'vulnerable',
+    title: 'Bonus sociale elettrico e gas',
+    description: 'Automatic discount on electricity and gas bills for households below the ISEE threshold continues in 2026, administered by ARERA via suppliers.',
+    announced: '2026-01-01',
+    status: 'active',
     source_url: 'https://www.arera.it/bonus-sociale',
     source_label: 'arera.it',
   },
   {
     country: 'IT',
     category: 'support',
-    subcategory: 'windfall_tax',
-    title: 'Contributo straordinario sugli extraprofitti energetici',
-    description: 'Solidarity contribution on extra profits of energy producers, importers and resellers, applied to the increase in VAT taxable base.',
-    announced: '2022-03-21',
-    status: 'expired',
-    source_url: 'https://www.agenziaentrate.gov.it/portale/contributo-extraprofitti',
-    source_label: 'agenziaentrate.gov.it',
-  },
-  {
-    country: 'IT',
-    category: 'conservation',
-    subcategory: 'heating_limits',
-    title: 'Heating-season cap (1°C lower, shorter)',
-    description: 'Decree by MITE reducing the maximum indoor temperature in residential and most non-residential buildings by 1°C and shortening the heating season by 15 days.',
-    announced: '2022-10-06',
-    status: 'expired',
-    source_url: 'https://www.mase.gov.it/comunicati/decreto-riscaldamento',
-    source_label: 'mase.gov.it',
+    subcategory: 'tax_cuts',
+    title: 'Fuel excise reductions and sectoral relief',
+    description: 'Per IEA tracker (Apr 2026): Italy retains cuts to fuel excise taxes plus targeted tax relief for road haulage and fisheries and a tax credit for agricultural businesses.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
-  // ── Netherlands ────────────────────────────────────────────────────
+  // ── Spain ──────────────────────────────────────────────────────────
   {
-    country: 'NL',
-    category: 'support',
-    subcategory: 'price_caps',
-    title: 'Prijsplafond energie (Energy price cap)',
-    description: 'Capped tariffs for electricity and gas up to a baseline annual consumption volume, applied via suppliers and reimbursed by the state for 2023.',
-    announced: '2022-10-04',
-    status: 'expired',
-    source_url: 'https://www.rijksoverheid.nl/onderwerpen/koopkracht/prijsplafond-voor-gas-en-elektriciteit',
-    source_label: 'rijksoverheid.nl',
-  },
-  {
-    country: 'NL',
-    category: 'support',
-    subcategory: 'household_grant',
-    title: 'Energietoeslag (one-off energy allowance)',
-    description: 'Lump-sum allowance for low-income households, paid via municipalities (€800 in 2022, €1,300 in 2023).',
-    announced: '2022-03-15',
-    status: 'expired',
-    source_url: 'https://www.rijksoverheid.nl/onderwerpen/koopkracht/energietoeslag',
-    source_label: 'rijksoverheid.nl',
-  },
-
-  // ── Belgium ────────────────────────────────────────────────────────
-  {
-    country: 'BE',
-    category: 'support',
-    subcategory: 'vulnerable',
-    title: 'Extended social tariff for energy',
-    description: 'Temporary expansion of the federal "tarif social" for electricity and gas to roughly one million additional households, then phased back to standard eligibility.',
-    announced: '2021-02-01',
-    status: 'expired',
-    source_url: 'https://economie.fgov.be/fr/themes/energie/tarif-social',
-    source_label: 'economie.fgov.be',
-  },
-  {
-    country: 'BE',
+    country: 'ES',
     category: 'support',
     subcategory: 'tax_cuts',
-    title: 'Reduced VAT on electricity, gas and heat (6%)',
-    description: 'VAT on residential electricity, natural gas and district heating reduced to 6%; subsequently made structural alongside an excise reform.',
-    announced: '2022-03-01',
+    title: 'Income-tax relief for energy renovations',
+    description: 'Personal income tax deductions for renovations, residential solar PV installations and electrification works, retained and extended into 2026.',
+    announced: '2026-01-01',
+    status: 'extended',
+    source_url: 'https://sede.agenciatributaria.gob.es/',
+    source_label: 'agenciatributaria.gob.es',
+  },
+  {
+    country: 'ES',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Fuel VAT cut and hydrocarbon excise suspension',
+    description: 'Per IEA tracker (Apr 2026): Spain retains a reduced VAT rate on automotive fuels and a partial suspension of the hydrocarbon excise duty.',
+    announced: '2026-04-14',
     status: 'active',
-    source_url: 'https://finance.belgium.be/fr/particuliers/famille/energie',
-    source_label: 'finance.belgium.be',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+  {
+    country: 'ES',
+    category: 'support',
+    subcategory: 'business_grant',
+    title: 'Self-consumption / energy communities reform',
+    description: 'Regulatory changes promoting new energy communities and additional self-consumption modalities — ongoing implementation through 2026.',
+    announced: '2026-01-01',
+    status: 'active',
+    source_url: 'https://www.miteco.gob.es/es/energia.html',
+    source_label: 'miteco.gob.es',
   },
 
   // ── Austria ────────────────────────────────────────────────────────
   {
     country: 'AT',
     category: 'support',
-    subcategory: 'price_caps',
-    title: 'Stromkostenbremse',
-    description: 'Subsidised electricity price for the first 2,900 kWh of annual household consumption, with the state covering the difference up to a reference price.',
-    announced: '2022-12-01',
-    status: 'expired',
-    source_url: 'https://www.stromkostenbremse.gv.at/',
-    source_label: 'stromkostenbremse.gv.at',
+    subcategory: 'fuel_margin',
+    title: 'Cap on fuel-retailer margins',
+    description: 'Per IEA tracker (Apr 2026): cap on the margin retailers can apply to fuel sales, alongside reduced gasoline and diesel taxes.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
-  // ── Portugal ───────────────────────────────────────────────────────
+  // ── Bulgaria ───────────────────────────────────────────────────────
   {
-    country: 'PT',
+    country: 'BG',
+    category: 'support',
+    subcategory: 'vulnerable',
+    title: 'Income-targeted fuel subsidy for car owners',
+    description: 'Per IEA tracker (Apr 2026): means-tested fuel subsidy for private car owners, plus increased fuel excise compensation for farmers.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Croatia ────────────────────────────────────────────────────────
+  {
+    country: 'HR',
     category: 'support',
     subcategory: 'price_caps',
-    title: 'Iberian exception (gas-price cap on power)',
-    description: 'Joint Portugal-Spain mechanism capping the gas price used for power generation, applied through the MIBEL wholesale market.',
-    announced: '2022-06-14',
-    status: 'expired',
-    source_url: 'https://www.dgeg.gov.pt/',
-    source_label: 'dgeg.gov.pt',
+    title: 'Cap on oil and diesel prices',
+    description: 'Per IEA tracker (Apr 2026): Croatia continues to cap retail oil and diesel prices, cut fuel excise duty and provide direct financial support for vulnerable groups and targeted aid for transport and agriculture.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Czechia ────────────────────────────────────────────────────────
+  {
+    country: 'CZ',
+    category: 'support',
+    subcategory: 'fuel_margin',
+    title: 'Cap on fuel-retailer profit margins + excise cut',
+    description: 'Per IEA tracker (Apr 2026): retailer profit-margin cap on fuels combined with a cut to fuel excise tax.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
   // ── Greece ─────────────────────────────────────────────────────────
   {
     country: 'GR',
     category: 'support',
-    subcategory: 'household_grant',
-    title: 'Power Pass / electricity bill subsidy',
-    description: 'Retroactive subsidy crediting a share of the previous months\' wholesale-driven price increases back to household electricity accounts.',
-    announced: '2022-06-01',
-    status: 'expired',
-    source_url: 'https://powerpass.gov.gr/',
-    source_label: 'powerpass.gov.gr',
+    subcategory: 'vulnerable',
+    title: 'Diesel subsidy + household fuel card + farmer fertilizer subsidy',
+    description: 'Per IEA tracker (Apr 2026): combined package — diesel subsidy, fuel card for households and a fertilizer subsidy for farmers — alongside a 3-month cap on fuel-retailer profit margins.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Hungary ────────────────────────────────────────────────────────
+  {
+    country: 'HU',
+    category: 'support',
+    subcategory: 'price_caps',
+    title: 'Fuel-price cap + excise cuts',
+    description: 'Per IEA tracker (Apr 2026): retail fuel price cap maintained, alongside cuts to gasoline and diesel excise taxes.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Latvia ─────────────────────────────────────────────────────────
+  {
+    country: 'LV',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Excise reduction on diesel and "green" diesel',
+    description: 'Per IEA tracker (Apr 2026): reduction of excise duty on diesel and on agricultural ("green") diesel.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Lithuania ──────────────────────────────────────────────────────
+  {
+    country: 'LT',
+    category: 'conservation',
+    subcategory: 'transport',
+    title: 'Local rail fares cut by 50% for two months',
+    description: 'Per IEA tracker (Apr 2026): temporary 50% reduction on local train fares for a two-month window to encourage modal shift away from private car use.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
   // ── Poland ─────────────────────────────────────────────────────────
@@ -382,110 +460,125 @@ export const MEASURES = [
     country: 'PL',
     category: 'support',
     subcategory: 'price_caps',
-    title: 'Frozen electricity tariffs up to consumption cap',
-    description: 'Households charged 2022 reference prices on electricity up to a baseline annual volume (raised for large families, disabled and farm households).',
-    announced: '2022-10-27',
-    status: 'expired',
-    source_url: 'https://www.gov.pl/web/klimat/tarcza-solidarnosciowa',
-    source_label: 'gov.pl',
-  },
-  {
-    country: 'PL',
-    category: 'support',
-    subcategory: 'household_grant',
-    title: 'Dodatek węglowy (Coal allowance)',
-    description: 'One-off PLN 3,000 allowance for households whose main heat source is coal, administered by municipalities.',
-    announced: '2022-08-12',
-    status: 'expired',
-    source_url: 'https://www.gov.pl/web/klimat/dodatek-weglowy',
-    source_label: 'gov.pl',
+    title: 'Petrol and diesel price caps',
+    description: 'Per IEA tracker (Apr 2026): cap on retail petrol and diesel prices, alongside a VAT cut on fuel and reduced excise duty.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
-  // ── Czechia ────────────────────────────────────────────────────────
+  // ── Portugal ───────────────────────────────────────────────────────
   {
-    country: 'CZ',
+    country: 'PT',
     category: 'support',
-    subcategory: 'price_caps',
-    title: 'Capped electricity and gas prices',
-    description: 'Government decree capping electricity at CZK 6,050/MWh and gas at CZK 3,025/MWh (incl. VAT) for households and SMEs up to a baseline consumption.',
-    announced: '2022-10-05',
-    status: 'expired',
-    source_url: 'https://www.mpo.gov.cz/cz/energetika/strop-cen-energii/',
-    source_label: 'mpo.gov.cz',
+    subcategory: 'tax_cuts',
+    title: 'Temporary fuel-tax cut',
+    description: 'Per IEA tracker (Apr 2026): temporary cut to fuel taxes retained.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Romania ────────────────────────────────────────────────────────
+  {
+    country: 'RO',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Diesel excise cut + transport-operator extension + windfall levy',
+    description: 'Per IEA tracker (Apr 2026): diesel excise cut, an extension of the diesel-excise scheme for transport operators, and a new solidarity levy on exceptional revenues from crude oil and petroleum sales.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Slovakia ───────────────────────────────────────────────────────
+  {
+    country: 'SK',
+    category: 'conservation',
+    subcategory: 'transport',
+    title: 'Cap on fuel purchases (higher prices for foreign plates)',
+    description: 'Per IEA tracker (Apr 2026): cap on fuel purchases at the pump, with higher prices applied to vehicles bearing foreign number plates.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+
+  // ── Slovenia ───────────────────────────────────────────────────────
+  {
+    country: 'SI',
+    category: 'conservation',
+    subcategory: 'transport',
+    title: 'Temporary cap on fuel purchases',
+    description: 'Per IEA tracker (Apr 2026): temporary cap on volume of fuel purchases per transaction.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
+  },
+  {
+    country: 'SI',
+    category: 'support',
+    subcategory: 'tax_cuts',
+    title: 'Excise reduction on petrol, diesel and heating oil',
+    description: 'Per IEA tracker (Apr 2026): reduction of excise duty on petrol, diesel and heating oil.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
   // ── Sweden ─────────────────────────────────────────────────────────
   {
     country: 'SE',
     category: 'support',
-    subcategory: 'household_grant',
-    title: 'High-cost protection (elprisstöd)',
-    description: 'Retroactive electricity-cost compensation paid via Försäkringskassan to households and businesses in the price areas with highest spot prices.',
-    announced: '2022-12-15',
-    status: 'expired',
-    source_url: 'https://www.regeringen.se/pressmeddelanden/2022/12/elprisstodet-ar-pa-vag/',
-    source_label: 'regeringen.se',
-  },
-
-  // ── Denmark ────────────────────────────────────────────────────────
-  {
-    country: 'DK',
-    category: 'support',
-    subcategory: 'household_grant',
-    title: 'Varmecheck (Heating cheque)',
-    description: 'One-off DKK 6,000 heating allowance for households with high heating costs and incomes below a defined threshold.',
-    announced: '2022-02-01',
-    status: 'expired',
-    source_url: 'https://www.borger.dk/oekonomi-skat-su/Varmecheck',
-    source_label: 'borger.dk',
-  },
-
-  // ── Finland ────────────────────────────────────────────────────────
-  {
-    country: 'FI',
-    category: 'conservation',
-    subcategory: 'campaigns',
-    title: 'Astetta alemmas (One degree lower)',
-    description: 'National energy-saving campaign coordinated by Motiva and government ministries, encouraging a 1°C reduction in indoor temperature and shorter showers.',
-    announced: '2022-10-10',
+    subcategory: 'tax_cuts',
+    title: 'Temporary cut to vehicle-fuels duty',
+    description: 'Per IEA tracker (Apr 2026): temporary reduction in the duty on vehicle fuels.',
+    announced: '2026-04-14',
     status: 'active',
-    source_url: 'https://astettaalemmas.fi/',
-    source_label: 'astettaalemmas.fi',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 
-  // ── EU level (UK / non-EU comparators) ─────────────────────────────
+  // ── United Kingdom ─────────────────────────────────────────────────
   {
     country: 'GB',
     category: 'support',
-    subcategory: 'price_caps',
-    title: 'Energy Price Guarantee (EPG)',
-    description: 'Cap on per-unit gas and electricity charges for typical household dual-fuel bills, with the difference reimbursed to suppliers from HM Treasury.',
-    announced: '2022-09-08',
-    status: 'expired',
-    source_url: 'https://www.gov.uk/government/publications/energy-bills-support/energy-bills-support-factsheet-8-september-2022',
-    source_label: 'gov.uk',
+    subcategory: 'vulnerable',
+    title: 'Heating support for vulnerable consumers',
+    description: 'Per IEA tracker (Apr 2026): targeted heating support for vulnerable consumers; the universal Energy Price Guarantee from 2022-23 has long since ended.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
   {
     country: 'GB',
     category: 'support',
     subcategory: 'household_grant',
-    title: 'Energy Bills Support Scheme (£400)',
-    description: 'Non-repayable £400 discount on domestic electricity bills delivered in six monthly instalments over winter 2022-23.',
-    announced: '2022-05-26',
-    status: 'expired',
-    source_url: 'https://www.gov.uk/government/publications/energy-bills-support-scheme-explainer',
-    source_label: 'gov.uk',
+    title: 'Warm Homes Plan acceleration + plug-in solar approval',
+    description: 'Per IEA tracker (Apr 2026): government accelerating the Warm Homes Plan, working to approve plug-in solar devices and issuing ministerial statements against fuel price gouging.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
+
+  // ── Norway ─────────────────────────────────────────────────────────
   {
-    country: 'GB',
+    country: 'NO',
     category: 'support',
-    subcategory: 'windfall_tax',
-    title: 'Energy Profits Levy',
-    description: 'Temporary additional surcharge on the profits of UK oil and gas producers, with subsequent rate increases and extension of the sunset date.',
-    announced: '2022-05-26',
-    status: 'extended',
-    source_url: 'https://www.gov.uk/government/publications/energy-taxes-factsheet',
-    source_label: 'gov.uk',
+    subcategory: 'tax_cuts',
+    title: 'Petrol and diesel tax cuts',
+    description: 'Per IEA tracker (Apr 2026): reductions in petrol and diesel taxes.',
+    announced: '2026-04-14',
+    status: 'active',
+    source_url: 'https://www.iea.org/data-and-statistics/data-tools/2026-energy-crisis-policy-response-tracker',
+    source_label: 'iea.org',
   },
 ]
 
