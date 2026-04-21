@@ -68,11 +68,19 @@ export async function fetchYouthUnemployment() {
   return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
 }
 
-// ── HICP Inflation (annual rate of change, monthly) ── Eurostat prc_hicp_manr
+// ── HICP Inflation (annual rate of change, monthly) ── Eurostat ei_cphi_m ──
+// Note: we use `ei_cphi_m` (Economic Indicators: HICP monthly) rather than
+// the legacy `prc_hicp_manr`. The legacy dataset was frozen at the 2025
+// vintage (label "(1997-2025)", last updated Feb 2026, data ends Dec 2025).
+// `ei_cphi_m` is kept current (updated ~mid-month) with:
+//   - unit=RT12   annual rate of change (YoY)
+//   - unit=RT1    monthly rate of change
+//   - unit=HICP2025  index, 2025=100
+//   - indic=TOTAL, CP-HI01..CP-HI13, CP-HIE, CP-HIF, CP-HIS, CP-HIIGXE,
+//     CP-HI00XEFU (core), CP-HI00XEF (super-core), etc.
 export async function fetchHICPInflation() {
-  const data = await fetchEurostatData('prc_hicp_manr', {
-    geo: 'IE',
-    coicop: 'CP00',
+  const data = await fetchEurostatData('ei_cphi_m', {
+    geo: 'IE', indic: 'TOTAL', unit: 'RT12',
     sinceTimePeriod: '2022-01',
   })
   return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
@@ -309,8 +317,9 @@ export async function fetchUnemploymentComparison() {
 }
 
 export async function fetchInflationComparison() {
-  const data = await fetchEurostatMultiGeo('prc_hicp_manr', {
-    geo: PEER_GEOS, coicop: 'CP00', sinceTimePeriod: '2022-01',
+  const data = await fetchEurostatMultiGeo('ei_cphi_m', {
+    geo: PEER_GEOS, indic: 'TOTAL', unit: 'RT12',
+    sinceTimePeriod: '2022-01',
   })
   return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))
 }
@@ -603,20 +612,27 @@ export async function fetchSentimentComparison() {
 // EXCHANGE RATES (from ECB via Eurostat)
 // ═══════════════════════════════════════════════════════════════════════
 
-// EUR/GBP exchange rate (monthly)
+// EUR/GBP exchange rate (monthly). Note: the `ert_bil_eur_m` dataset
+// dropped its `geo` dimension in a 2024 restructure; the older call
+// pattern (geo=UK) silently returned empty. The series is already keyed
+// by currency so we just pass currency + statinfo.
+// Eurostat stores GBP-per-EUR; the fetcher keeps that direction so
+// downstream charts read as "pounds per euro".
 export async function fetchEURGBP() {
   const data = await fetchEurostatData('ert_bil_eur_m', {
-    geo: 'UK', currency: 'GBP', statinfo: 'AVG', sinceTimePeriod: '2022-01',
+    currency: 'GBP', statinfo: 'AVG', unit: 'NAC',
+    sinceTimePeriod: '2022-01',
   })
-  return data.map(d => ({ period: fmtMonth(d.period), value: round2(1 / d.value) }))
+  return data.map(d => ({ period: fmtMonth(d.period), value: round2(d.value) }))
 }
 
-// EUR/USD exchange rate (monthly)
+// EUR/USD exchange rate (monthly). USD per EUR.
 export async function fetchEURUSD() {
   const data = await fetchEurostatData('ert_bil_eur_m', {
-    geo: 'US', currency: 'USD', statinfo: 'AVG', sinceTimePeriod: '2022-01',
+    currency: 'USD', statinfo: 'AVG', unit: 'NAC',
+    sinceTimePeriod: '2022-01',
   })
-  return data.map(d => ({ period: fmtMonth(d.period), value: round2(1 / d.value) }))
+  return data.map(d => ({ period: fmtMonth(d.period), value: round2(d.value) }))
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -648,55 +664,91 @@ export async function fetchBundSpread() {
 // CORE INFLATION & HICP LEVELS
 // ═══════════════════════════════════════════════════════════════════════
 
-// Core inflation (HICP excluding energy and unprocessed food, annual rate)
+// Core inflation: all items excluding energy and unprocessed food.
 export async function fetchCoreInflation() {
-  const data = await fetchEurostatData('prc_hicp_manr', {
-    geo: 'IE', coicop: 'TOT_X_NRG_FOOD', sinceTimePeriod: '2022-01',
+  const data = await fetchEurostatData('ei_cphi_m', {
+    geo: 'IE', indic: 'CP-HI00XEFU', unit: 'RT12',
+    sinceTimePeriod: '2022-01',
   })
   return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
 }
 
 // ── HICP by economic classification (services, goods, energy, food) ──
-// All queries hit prc_hicp_manr (annual rate of change, monthly).
-// coicop codes:
-//   SERV             = Services
-//   IGD_NNRG         = Non-energy industrial goods
-//   NRG              = Energy
-//   FOOD             = Food including alcohol and tobacco
-//   FOOD_P           = Processed food
-//   TOT_X_NRG_FOOD_S = All items excluding energy, food, alcohol, tobacco (ECB "supercore")
+// All queries hit ei_cphi_m (YoY rate, monthly, current vintage).
+// indic codes:
+//   CP-HIS        Services
+//   CP-HIIGXE     Non-energy industrial goods
+//   CP-HIE        Energy
+//   CP-HIF        Food (incl. alcohol, tobacco)
+//   CP-HIFU       Unprocessed food
+//   CP-HI00XEF    All items excluding energy, food, alcohol, tobacco (ECB "super-core")
+//   CP-HI00XEFU   Core (ex energy and unprocessed food)
 
-async function hicpSeries(coicop) {
-  const data = await fetchEurostatData('prc_hicp_manr', {
-    geo: 'IE', coicop, sinceTimePeriod: '2019-01',
+async function hicpSeries(indic) {
+  const data = await fetchEurostatData('ei_cphi_m', {
+    geo: 'IE', indic, unit: 'RT12',
+    sinceTimePeriod: '2019-01',
   })
   return data.map(d => ({ period: fmtMonth(d.period), rawPeriod: d.period, value: round1(d.value) }))
 }
 
-export const fetchServicesInflation    = () => hicpSeries('SERV')
-export const fetchGoodsInflation       = () => hicpSeries('IGD_NNRG')
-export const fetchEnergyInflation      = () => hicpSeries('NRG')
-export const fetchFoodInflation        = () => hicpSeries('FOOD')
-export const fetchProcessedFoodInflation = () => hicpSeries('FOOD_P')
-export const fetchSuperCoreInflation   = () => hicpSeries('TOT_X_NRG_FOOD_S')
+export const fetchServicesInflation    = () => hicpSeries('CP-HIS')
+export const fetchGoodsInflation       = () => hicpSeries('CP-HIIGXE')
+export const fetchEnergyInflation      = () => hicpSeries('CP-HIE')
+export const fetchFoodInflation        = () => hicpSeries('CP-HIF')
+export const fetchUnprocessedFoodInflation = () => hicpSeries('CP-HIFU')
+export const fetchSuperCoreInflation   = () => hicpSeries('CP-HI00XEF')
 
-// Combined multi-component HICP (one shot, 6 components + headline + core)
+// Combined multi-component HICP (one shot, headline + core + components).
 export async function fetchHICPComponents() {
   const codes = [
-    { code: 'CP00',              label: 'Headline (all items)' },
-    { code: 'TOT_X_NRG_FOOD',    label: 'Core (ex energy & unproc. food)' },
-    { code: 'TOT_X_NRG_FOOD_S',  label: 'Super-core (ex energy, food, alc, tob)' },
-    { code: 'SERV',              label: 'Services' },
-    { code: 'IGD_NNRG',          label: 'Goods (ex energy)' },
-    { code: 'NRG',               label: 'Energy' },
-    { code: 'FOOD',              label: 'Food' },
-    { code: 'FOOD_P',            label: 'Processed food' },
+    { code: 'TOTAL',        label: 'Headline (all items)' },
+    { code: 'CP-HI00XEFU',  label: 'Core (ex energy & unproc. food)' },
+    { code: 'CP-HI00XEF',   label: 'Super-core (ex energy, food, alc, tob)' },
+    { code: 'CP-HIS',       label: 'Services' },
+    { code: 'CP-HIIGXE',    label: 'Goods (ex energy)' },
+    { code: 'CP-HIE',       label: 'Energy' },
+    { code: 'CP-HIF',       label: 'Food' },
+    { code: 'CP-HIFU',      label: 'Unprocessed food' },
   ]
   const results = await Promise.all(codes.map(async c => {
     const rows = await hicpSeries(c.code)
     return rows.map(r => ({ ...r, component: c.code, componentLabel: c.label }))
   }))
   return results.flat()
+}
+
+// HICP by ECOICOP division (13 divisions), latest vintage.
+// Returns an array of { period, rawPeriod, value, coicop, coicopLabel }.
+export const HICP_COICOP_LABELS = {
+  'CP-HI01': 'Food & non-alcoholic beverages',
+  'CP-HI02': 'Alcohol, tobacco & narcotics',
+  'CP-HI03': 'Clothing & footwear',
+  'CP-HI04': 'Housing, water, electricity, gas',
+  'CP-HI05': 'Furnishings & household equipment',
+  'CP-HI06': 'Health',
+  'CP-HI07': 'Transport',
+  'CP-HI08': 'Information & communication',
+  'CP-HI09': 'Recreation, sport & culture',
+  'CP-HI10': 'Education services',
+  'CP-HI11': 'Restaurants & accommodation',
+  'CP-HI12': 'Insurance & financial services',
+  'CP-HI13': 'Personal care & misc. goods',
+}
+
+export async function fetchHICPByCOICOP() {
+  const indics = Object.keys(HICP_COICOP_LABELS)
+  const data = await fetchEurostatMultiDim('ei_cphi_m', {
+    geo: 'IE', indic: indics, unit: 'RT12',
+    sinceTimePeriod: '2022-01',
+  }, 'indic')
+  return data.map(d => ({
+    period: fmtMonth(d.period),
+    rawPeriod: d.period,
+    value: round1(d.value),
+    coicop: d.code,
+    coicopLabel: HICP_COICOP_LABELS[d.code] || d.label,
+  }))
 }
 
 // ── Inflation expectations from Eurostat consumer survey ei_bsco_m ──
@@ -819,11 +871,14 @@ export async function fetchCSOCpiByCOICOP() {
   })
 }
 
-// HICP level index comparison across countries (2015=100)
+// HICP level index comparison across countries (2025=100, current vintage).
+// Uses ei_cphi_m with unit=HICP2025 (rebased 2025=100). UK is out of
+// scope for this dataset since UK left the HICP framework on Brexit; we
+// use the EU-27 + peer set instead.
 export async function fetchHICPLevelComparison() {
-  const data = await fetchEurostatMultiGeo('prc_hicp_midx', {
-    geo: ['IE', 'EA20', 'DE', 'FR', 'UK'],
-    coicop: 'CP00', unit: 'I15',
+  const data = await fetchEurostatMultiGeo('ei_cphi_m', {
+    geo: ['IE', 'EA20', 'EU27_2020', 'DE', 'FR', 'NL'],
+    indic: 'TOTAL', unit: 'HICP2025',
     sinceTimePeriod: '2022-01',
   })
   return tagGeo(data).map(d => ({ ...d, period: fmtMonth(d.period), value: round1(d.value) }))

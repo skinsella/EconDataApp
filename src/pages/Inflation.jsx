@@ -19,14 +19,14 @@ import {
   fetchGoodsInflation,
   fetchEnergyInflation,
   fetchFoodInflation,
-  fetchProcessedFoodInflation,
+  fetchUnprocessedFoodInflation,
   fetchPriceTrendsPerceived,
   fetchPriceTrendsExpected,
   fetchProducerPrices,
   fetchEnergyProducerPrices,
   fetchInflationComparison,
-  fetchCSOCpiByCOICOP,
-  CSO_CPI_COICOP_LABELS,
+  fetchHICPByCOICOP,
+  HICP_COICOP_LABELS,
 } from '@/services/indicators'
 
 // Align multiple component time series on period. Each fetcher returns
@@ -75,13 +75,13 @@ export default function Inflation() {
         goods:            fetchGoodsInflation,
         energy:           fetchEnergyInflation,
         food:             fetchFoodInflation,
-        procFood:         fetchProcessedFoodInflation,
+        unprocFood:       fetchUnprocessedFoodInflation,
         perceived:        fetchPriceTrendsPerceived,
         expected:         fetchPriceTrendsExpected,
         ppi:              fetchProducerPrices,
         ppiEnergy:        fetchEnergyProducerPrices,
         peers:            fetchInflationComparison,
-        csoCoicop:        fetchCSOCpiByCOICOP,
+        hicpByCoicop:     fetchHICPByCOICOP,
       }
 
       const keys = Object.keys(fetchers)
@@ -137,27 +137,21 @@ export default function Inflation() {
     ppiEnergy: data.ppiEnergy || [],
   }), [data.ppi, data.ppiEnergy])
 
-  // CSO CPI: latest snapshot by commodity group
-  const csoLatestBars = useMemo(() => {
-    const rows = data.csoCoicop || []
+  // HICP by ECOICOP division: latest snapshot
+  const coicopLatestBars = useMemo(() => {
+    const rows = data.hicpByCoicop || []
     if (rows.length === 0) return { period: null, bars: [] }
     const latestRaw = rows.reduce((acc, r) => (r.rawPeriod > acc ? r.rawPeriod : acc), rows[0].rawPeriod)
     const keep = rows.filter(r => r.rawPeriod === latestRaw)
-    // Put "All items" first, then divisions by YoY descending
-    const sorted = keep.slice().sort((a, b) => {
-      if (a.coicop === '-') return -1
-      if (b.coicop === '-') return 1
-      return b.value - a.value
-    })
+    const sorted = keep.slice().sort((a, b) => b.value - a.value)
     return {
       period: sorted[0]?.period || null,
       bars: sorted.map(r => ({
-        group: r.coicopLabel || CSO_CPI_COICOP_LABELS[r.coicop] || r.coicop,
+        group: r.coicopLabel || HICP_COICOP_LABELS[r.coicop] || r.coicop,
         value: r.value,
-        isHeadline: r.coicop === '-',
       })),
     }
-  }, [data.csoCoicop])
+  }, [data.hicpByCoicop])
 
   const peersChart = useMemo(() => pivotByGeo(data.peers || []), [data.peers])
   const peerLabels = useMemo(() => {
@@ -193,11 +187,12 @@ export default function Inflation() {
         <CardContent className="p-4 flex items-start gap-3">
           <Info className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-sm text-amber-900">
-            Eurostat HICP is the most timely source for Ireland (reported one month after the reference month).
-            CSO CPI is published on the same cadence and broken out by 12 COICOP divisions for richer compositional
-            detail but with a slightly longer publication lag — it is the dataset used for the bar chart at the bottom.
-            Producer prices (Eurostat <code>sts_inppd_m</code>) are a leading upstream signal; sharp moves in energy
-            PPI typically feed through into headline HICP 2-6 months later.
+            All HICP series on this page come from Eurostat <code>ei_cphi_m</code>, the current-vintage monthly
+            HICP dataset (refreshed mid-month, ~2 weeks after the reference month). The legacy
+            <code>prc_hicp_manr</code> / <code>prc_hicp_midx</code> datasets are frozen at the 2025 vintage and
+            stop in December 2025 — they are no longer used here. Producer prices (Eurostat <code>sts_inppd_m</code>)
+            are a leading upstream signal; sharp moves in energy PPI typically feed through into headline HICP
+            2-6 months later.
           </p>
         </CardContent>
       </Card>
@@ -354,15 +349,15 @@ export default function Inflation() {
         </ChartCard>
       </div>
 
-      {/* CSO CPI by COICOP division, latest snapshot */}
+      {/* HICP by ECOICOP division, latest snapshot */}
       <ChartCard
-        title={`CSO CPI by COICOP division — ${csoLatestBars.period ?? 'loading…'}`}
-        subtitle="Ireland · YoY % for the 12 COICOP divisions · CSO CPM01. Housing/water/energy and restaurants/hotels often lead the ranking."
+        title={`HICP by ECOICOP division — ${coicopLatestBars.period ?? 'loading…'}`}
+        subtitle="Ireland · YoY % for the 13 ECOICOP divisions · Eurostat ei_cphi_m (current vintage). Housing/water/energy and restaurants often lead the ranking; transport is typically the most volatile."
         loading={loading}
-        error={errors.csoCoicop}
-        data={csoLatestBars.bars}
+        error={errors.hicpByCoicop}
+        data={coicopLatestBars.bars}
       >
-        <BarChart data={csoLatestBars.bars} layout="vertical" margin={{ left: 10, right: 30 }}>
+        <BarChart data={coicopLatestBars.bars} layout="vertical" margin={{ left: 10, right: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis type="number" tick={{ fontSize: 11 }} stroke="#94a3b8" />
           <YAxis type="category" dataKey="group" tick={{ fontSize: 10 }} width={240} stroke="#94a3b8" />
@@ -401,8 +396,9 @@ export default function Inflation() {
       </ChartCard>
 
       <p className="text-xs text-slate-400 text-center pt-4">
-        Sources: Eurostat <code>prc_hicp_manr</code> (headline + 7 economic-class series), <code>sts_inppd_m</code> (PPI, industry &amp; D35 energy),
-        <code>ei_bsco_m</code> (consumer survey, BS-PT-LY / BS-PT-NY); CSO <code>CPM01</code> (12 COICOP divisions).
+        Sources: Eurostat <code>ei_cphi_m</code> (headline + 13 ECOICOP divisions + economic-class aggregates, RT12 annual rate),
+        <code>sts_inppd_m</code> (PPI, industry &amp; D35 energy, PCH_SM), <code>ei_bsco_m</code> (consumer survey BS-PT-LY / BS-PT-NY balances).
+        The legacy <code>prc_hicp_manr</code> dataset (frozen at the 2025 vintage) is no longer used.
         Reference line at 2% marks the ECB inflation target.
       </p>
     </motion.div>
