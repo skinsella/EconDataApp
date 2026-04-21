@@ -1,6 +1,6 @@
 import { fetchEurostatData, fetchEurostatMultiGeo, fetchEurostatMultiDim } from './eurostat'
 import { fetchWorldBankData } from './worldbank'
-import { fetchCSOSeries } from './cso'
+import { fetchCSOSeries, fetchCSOData } from './cso'
 
 /**
  * Centralised indicator fetchers.
@@ -654,6 +654,169 @@ export async function fetchCoreInflation() {
     geo: 'IE', coicop: 'TOT_X_NRG_FOOD', sinceTimePeriod: '2022-01',
   })
   return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// ── HICP by economic classification (services, goods, energy, food) ──
+// All queries hit prc_hicp_manr (annual rate of change, monthly).
+// coicop codes:
+//   SERV             = Services
+//   IGD_NNRG         = Non-energy industrial goods
+//   NRG              = Energy
+//   FOOD             = Food including alcohol and tobacco
+//   FOOD_P           = Processed food
+//   TOT_X_NRG_FOOD_S = All items excluding energy, food, alcohol, tobacco (ECB "supercore")
+
+async function hicpSeries(coicop) {
+  const data = await fetchEurostatData('prc_hicp_manr', {
+    geo: 'IE', coicop, sinceTimePeriod: '2019-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), rawPeriod: d.period, value: round1(d.value) }))
+}
+
+export const fetchServicesInflation    = () => hicpSeries('SERV')
+export const fetchGoodsInflation       = () => hicpSeries('IGD_NNRG')
+export const fetchEnergyInflation      = () => hicpSeries('NRG')
+export const fetchFoodInflation        = () => hicpSeries('FOOD')
+export const fetchProcessedFoodInflation = () => hicpSeries('FOOD_P')
+export const fetchSuperCoreInflation   = () => hicpSeries('TOT_X_NRG_FOOD_S')
+
+// Combined multi-component HICP (one shot, 6 components + headline + core)
+export async function fetchHICPComponents() {
+  const codes = [
+    { code: 'CP00',              label: 'Headline (all items)' },
+    { code: 'TOT_X_NRG_FOOD',    label: 'Core (ex energy & unproc. food)' },
+    { code: 'TOT_X_NRG_FOOD_S',  label: 'Super-core (ex energy, food, alc, tob)' },
+    { code: 'SERV',              label: 'Services' },
+    { code: 'IGD_NNRG',          label: 'Goods (ex energy)' },
+    { code: 'NRG',               label: 'Energy' },
+    { code: 'FOOD',              label: 'Food' },
+    { code: 'FOOD_P',            label: 'Processed food' },
+  ]
+  const results = await Promise.all(codes.map(async c => {
+    const rows = await hicpSeries(c.code)
+    return rows.map(r => ({ ...r, component: c.code, componentLabel: c.label }))
+  }))
+  return results.flat()
+}
+
+// ── Inflation expectations from Eurostat consumer survey ei_bsco_m ──
+// BS-PT-LY: price trends over the last 12 months (realised perception)
+// BS-PT-NY: price trends over the next 12 months (expectation)
+// Both are "balance" responses (SA).
+export async function fetchPriceTrendsPerceived() {
+  const data = await fetchEurostatData('ei_bsco_m', {
+    geo: 'IE', indic: 'BS-PT-LY', s_adj: 'SA', unit: 'BAL',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+export async function fetchPriceTrendsExpected() {
+  const data = await fetchEurostatData('ei_bsco_m', {
+    geo: 'IE', indic: 'BS-PT-NY', s_adj: 'SA', unit: 'BAL',
+    sinceTimePeriod: '2020-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// ── Producer prices (Eurostat sts_inppd_m, domestic market, monthly) ──
+// indic_bt = PRC_PRR_DOM (Domestic producer prices).
+// unit: PCH_SM (YoY) or I21 (index, 2021=100).
+export async function fetchProducerPrices() {
+  const data = await fetchEurostatData('sts_inppd_m', {
+    geo: 'IE', nace_r2: 'B-E36', indic_bt: 'PRC_PRR_DOM',
+    s_adj: 'NSA', unit: 'PCH_SM',
+    sinceTimePeriod: '2019-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+export async function fetchEnergyProducerPrices() {
+  const data = await fetchEurostatData('sts_inppd_m', {
+    geo: 'IE', nace_r2: 'D35', indic_bt: 'PRC_PRR_DOM',
+    s_adj: 'NSA', unit: 'PCH_SM',
+    sinceTimePeriod: '2019-01',
+  })
+  return data.map(d => ({ period: fmtMonth(d.period), value: round1(d.value) }))
+}
+
+// ── CSO Consumer Price Index by COICOP division (CPM01) ────────────────
+// CPM01 uses `CPM01C07` = % change over 12 months (YoY) and has 13
+// commodity group codes: "-" (All items) plus 01..12 (COICOP divisions).
+export const CSO_CPI_COICOP_LABELS = {
+  '-' : 'All items',
+  '01': 'Food & non-alcoholic beverages',
+  '02': 'Alcohol & tobacco',
+  '03': 'Clothing & footwear',
+  '04': 'Housing, water, electricity, gas & fuels',
+  '05': 'Furnishings & household equipment',
+  '06': 'Health',
+  '07': 'Transport',
+  '08': 'Communications',
+  '09': 'Recreation & culture',
+  '10': 'Education',
+  '11': 'Restaurants & hotels',
+  '12': 'Miscellaneous goods & services',
+}
+
+// Pretty "2025M11" / "2025 November" → "Nov 2025"
+function fmtCSOMonth(p) {
+  const m = p.match(/(\d{4})\s*([A-Za-z]+|M(\d{2}))/)
+  if (!m) return p
+  const year = m[1]
+  if (m[3]) return `${MONTH_NAMES[parseInt(m[3], 10) - 1]} ${year}`
+  const name = m[2].slice(0, 3)
+  return `${name} ${year}`
+}
+
+// Fetch CSO CPI YoY % for all 13 commodity groups in one call.
+// Returns an array of { period, rawPeriod, value, coicop, coicopLabel }.
+export async function fetchCSOCpiByCOICOP() {
+  const all = await fetchCSOData('CPM01')
+  const out = []
+  for (const row of all) {
+    // label format: "Percentage Change over 12 months for Consumer Price Index - <group>"
+    if (!row.label.startsWith('Percentage Change over 12 months')) continue
+    // period like "2025 November" — convert to "Nov 2025"
+    out.push({
+      period: fmtCSOMonth(row.period),
+      rawPeriod: row.period,
+      value: round1(row.value),
+      label: row.label,
+    })
+  }
+  // We don't get COICOP codes back from fetchCSOData (it collapses labels);
+  // parse them from the label suffix. The data was also emitted for each of
+  // the 13 commodity groups, so `out` contains 13×N rows.
+  const labelToCode = Object.fromEntries(
+    Object.entries(CSO_CPI_COICOP_LABELS).map(([code, label]) => [label, code]),
+  )
+  const shortLabelMap = {
+    'All items': '-',
+    'Food and non-alcoholic beverages': '01',
+    'Alcoholic beverages and tobacco': '02',
+    'Clothing and footwear': '03',
+    'Housing, water, electricity, gas and other fuels': '04',
+    'Furnishings, household equipment and routine household maintenance': '05',
+    'Health': '06',
+    'Transport': '07',
+    'Communications': '08',
+    'Recreation and culture': '09',
+    'Education': '10',
+    'Restaurants and hotels': '11',
+    'Miscellaneous goods and services': '12',
+  }
+  return out.map(r => {
+    // extract trailing group label after last ' - '
+    const parts = r.label.split(' - ')
+    const group = parts[parts.length - 1].trim()
+    const code = shortLabelMap[group] || labelToCode[group] || '?'
+    return {
+      ...r,
+      coicop: code,
+      coicopLabel: CSO_CPI_COICOP_LABELS[code] || group,
+    }
+  })
 }
 
 // HICP level index comparison across countries (2015=100)

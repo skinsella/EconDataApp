@@ -17,6 +17,7 @@ import DataSources from './pages/DataSources'
 import EnergyTracker from './pages/EnergyTracker'
 import Employment from './pages/Employment'
 import PeerBenchmarks from './pages/PeerBenchmarks'
+import Inflation from './pages/Inflation'
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/energy-tracker" element={<EnergyTracker />} />
           <Route path="/employment" element={<Employment />} />
           <Route path="/peer-benchmarks" element={<PeerBenchmarks />} />
+          <Route path="/inflation" element={<Inflation />} />
           <Route path="/data-sources" element={<DataSources />} />
         </Routes>
       </Layout>
