@@ -211,13 +211,11 @@ export async function fetchDwellingCompletions() {
     STATISTIC: 'NDQ01C02',
     C02342V02816: '-',
   })
-  // CSO quarterly periods are like "2025Q4" — need to format
+  // CSO quarterly periods are like "2025Q4" — need to format.
+  // parseInt('2025Q4', 10) === 2025, so a plain int compare is safe
+  // and avoids the string/int mix that used to live here.
   return data
-    .filter(d => {
-      // Only keep recent data (2018+)
-      const year = parseInt(d.period, 10)
-      return year >= 2018 || d.period >= '2018'
-    })
+    .filter(d => parseInt(d.period, 10) >= 2018)
     .map(d => ({ period: fmtQuarter(d.period), value: Math.round(d.value) }))
 }
 
@@ -242,10 +240,7 @@ export async function fetchEarnings() {
   }
 
   return Array.from(periodMap.entries())
-    .filter(([p]) => {
-      const year = parseInt(p, 10)
-      return year >= 2015 || p >= '2015'
-    })
+    .filter(([p]) => parseInt(p, 10) >= 2015)
     .sort(([a], [b]) => a < b ? -1 : 1)
     .map(([period, value]) => ({ period: fmtQuarter(period), value: round1(value) }))
 }
@@ -691,6 +686,157 @@ export async function fetchGasPricesBusiness() {
     sinceTimePeriod: '2020',
   })
   return tagGeo(data).map(d => ({ ...d, value: round2(d.value) }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PEER BENCHMARKS (Eurostat productivity, R&D, education + World Bank)
+// NOTE: The OECD SDMX endpoint (sdmx.oecd.org) now serves SDMX 2.0.0
+// responses which nest dataSets under `data.dataSets`. src/services/oecd.js
+// parses the legacy 1.x shape, so a parser rewrite is needed before we
+// can call OECD directly. Until then, peer benchmarks are sourced from
+// Eurostat (for EU peers) and the World Bank (for a US comparator).
+// ═══════════════════════════════════════════════════════════════════════
+
+const BENCH_GEOS = ['IE', 'EA20', 'EU27_2020', 'DE', 'NL', 'FR']
+
+// Real labour productivity per hour worked (index 2015=100, annual).
+// Eurostat nama_10_lp_ulc, na_item=RLPR_HW.
+export async function fetchProductivityPerHourComparison() {
+  const data = await fetchEurostatMultiGeo('nama_10_lp_ulc', {
+    geo: BENCH_GEOS, na_item: 'RLPR_HW', unit: 'I15',
+    sinceTimePeriod: '2015',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round1(d.value) }))
+}
+
+// Gross domestic expenditure on R&D (% GDP, annual, all sectors).
+export async function fetchRDIntensityComparison() {
+  const data = await fetchEurostatMultiGeo('rd_e_gerdtot', {
+    geo: BENCH_GEOS, sectperf: 'TOTAL', unit: 'PC_GDP',
+    sinceTimePeriod: '2010',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round2(d.value) }))
+}
+
+// Tertiary education attainment, age 25-34 (%, annual).
+export async function fetchTertiaryEducationComparison() {
+  const data = await fetchEurostatMultiGeo('edat_lfse_03', {
+    geo: BENCH_GEOS, age: 'Y25-34', sex: 'T',
+    isced11: 'ED5-8', unit: 'PC',
+    sinceTimePeriod: '2010',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round1(d.value) }))
+}
+
+// Government expenditure on education (% GDP, annual).
+// Eurostat gov_10a_exp with cofog99=GF09 total expenditure.
+export async function fetchEducationSpendComparison() {
+  const data = await fetchEurostatMultiGeo('gov_10a_exp', {
+    geo: BENCH_GEOS, cofog99: 'GF09', na_item: 'TE',
+    sector: 'S13', unit: 'PC_GDP',
+    sinceTimePeriod: '2010',
+  })
+  return tagGeo(data).map(d => ({ ...d, value: round2(d.value) }))
+}
+
+// GDP per capita in current US$ for a comparator group (World Bank).
+const WB_ISO = [
+  { iso: 'IRL', label: 'Ireland' },
+  { iso: 'DEU', label: 'Germany' },
+  { iso: 'NLD', label: 'Netherlands' },
+  { iso: 'FRA', label: 'France' },
+  { iso: 'USA', label: 'United States' },
+  { iso: 'GBR', label: 'United Kingdom' },
+]
+
+export async function fetchGDPPerCapitaComparison() {
+  const results = await Promise.all(
+    WB_ISO.map(async ({ iso, label }) => {
+      const rows = await fetchWorldBankData(iso, 'NY.GDP.PCAP.CD', 2010, 2025)
+      return rows.map(d => ({
+        period: d.period,
+        value: Math.round(d.value),
+        geo: iso,
+        geoLabel: label,
+      }))
+    }),
+  )
+  return results.flat()
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMPLOYMENT STRUCTURE (Eurostat lfsi_* + namq_10_a10_e)
+// ═══════════════════════════════════════════════════════════════════════
+
+// Employment rate (20-64, both sexes, % of population, SA, quarterly)
+// Eurostat lfsi_emp_q — note: SCA is not available for this dataset,
+// use SA instead.
+export async function fetchEmploymentRate() {
+  const data = await fetchEurostatData('lfsi_emp_q', {
+    geo: 'IE', age: 'Y20-64', sex: 'T',
+    indic_em: 'EMP_LFS', unit: 'PC_POP', s_adj: 'SA',
+    sinceTimePeriod: '2015-Q1',
+  })
+  return data.map(d => ({ period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+// Activity rate (20-64, both sexes, % of population, SA, quarterly)
+export async function fetchActivityRate() {
+  const data = await fetchEurostatData('lfsi_emp_q', {
+    geo: 'IE', age: 'Y20-64', sex: 'T',
+    indic_em: 'ACT', unit: 'PC_POP', s_adj: 'SA',
+    sinceTimePeriod: '2015-Q1',
+  })
+  return data.map(d => ({ period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+// Youth employment rate (15-24, %, quarterly, SA)
+export async function fetchYouthEmploymentRate() {
+  const data = await fetchEurostatData('lfsi_emp_q', {
+    geo: 'IE', age: 'Y15-24', sex: 'T',
+    indic_em: 'EMP_LFS', unit: 'PC_POP', s_adj: 'SA',
+    sinceTimePeriod: '2015-Q1',
+  })
+  return data.map(d => ({ period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+// Employment rate peer comparison
+export async function fetchEmploymentRateComparison() {
+  const data = await fetchEurostatMultiGeo('lfsi_emp_q', {
+    geo: PEER_GEOS, age: 'Y20-64', sex: 'T',
+    indic_em: 'EMP_LFS', unit: 'PC_POP', s_adj: 'SA',
+    sinceTimePeriod: '2022-Q1',
+  })
+  return tagGeo(data).map(d => ({ ...d, period: fmtQuarter(d.period), value: round1(d.value) }))
+}
+
+// Employment by NACE A10 sector, domestic concept (thousands of persons,
+// quarterly, SCA). Eurostat namq_10_a10_e.
+export const NACE_A10_LABELS = {
+  'A':    'Agriculture & fishing',
+  'B-E':  'Industry (ex. construction)',
+  'F':    'Construction',
+  'G-I':  'Trade, transport, hospitality',
+  'J':    'Information & communication',
+  'K':    'Finance & insurance',
+  'L':    'Real estate',
+  'M_N':  'Professional & admin services',
+  'O-Q':  'Public admin, education, health',
+  'R-U':  'Arts, recreation & other',
+}
+
+export async function fetchEmploymentByNACE() {
+  const nace_r2 = Object.keys(NACE_A10_LABELS)
+  const data = await fetchEurostatMultiDim('namq_10_a10_e', {
+    geo: 'IE', nace_r2, na_item: 'EMP_DC', unit: 'THS_PER', s_adj: 'SCA',
+    sinceTimePeriod: '2015-Q1',
+  }, 'nace_r2')
+  return data.map(d => ({
+    period: fmtQuarter(d.period),
+    sector: d.code,
+    sectorLabel: NACE_A10_LABELS[d.code] || d.label,
+    value: round1(d.value),
+  }))
 }
 
 // ═══════════════════════════════════════════════════════════════════════

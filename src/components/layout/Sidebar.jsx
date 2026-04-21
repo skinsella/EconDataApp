@@ -16,6 +16,8 @@ import {
   Smile,
   TableProperties,
   Zap,
+  Briefcase,
+  FlaskConical,
 } from 'lucide-react'
 
 const navigation = [
@@ -25,7 +27,9 @@ const navigation = [
   { name: 'Outlook & Forecasts', path: '/outlook', icon: Eye },
   { name: 'Confidence', path: '/confidence', icon: Smile },
   { name: 'Benchmarks', path: '/benchmarks', icon: Scale },
+  { name: 'Productivity & Skills', path: '/peer-benchmarks', icon: FlaskConical },
   { name: 'Public Finances', path: '/public-finances', icon: Landmark },
+  { name: 'Employment', path: '/employment', icon: Briefcase },
   { name: 'Structural', path: '/structural', icon: Building },
   { name: 'Latest Reports', path: '/latest-reports', icon: FileText },
   { name: 'Trade Reports', path: '/trade-reports', icon: Globe },

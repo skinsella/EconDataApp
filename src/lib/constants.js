@@ -1,7 +1,7 @@
 // API Base URLs
 export const API_URLS = {
   CSO: 'https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset',
-  ECB: 'https://sdw-wsrest.ecb.europa.eu/service/data',
+  ECB: 'https://data-api.ecb.europa.eu/service/data',
   EUROSTAT: 'https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data',
   OECD: 'https://sdmx.oecd.org/public/rest/data',
   WORLD_BANK: 'https://api.worldbank.org/v2',
@@ -54,17 +54,52 @@ export const CHART_COLORS = [
   '#10b981', '#f43f5e', '#8b5cf6', '#06b6d4',
 ]
 
-// Countdown events
+// Countdown events — seed list. Past events are filtered out at render
+// time via `upcomingEvents()` below, so the dashboard never displays a
+// stale entry. When an item fires, replace it with the next instance
+// rather than editing in place so the history survives in git.
+//
+// ECB monetary-policy meeting dates below are taken from the ECB
+// Governing Council calendar (decision day of each two-day meeting):
+// https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html
 export const COUNTDOWN_EVENTS = [
-  { title: 'Office Changeover', targetDate: '2027-11-17' },
-  { title: 'General Election', targetDate: '2029-11-17' },
+  // Irish political / fiscal calendar
   { title: 'Budget 2027', targetDate: '2026-10-13' },
-  { title: 'ECB Next Meeting', targetDate: '2026-04-17' },
-  { title: 'CSO GDP Release', targetDate: '2026-06-26' },
-  { title: 'OECD Economic Outlook', targetDate: '2026-06-10' },
-  { title: 'EU Summit', targetDate: '2026-06-25' },
-  { title: 'IMF World Economic Outlook', targetDate: '2026-10-01' },
+  { title: 'Summer Economic Statement 2026', targetDate: '2026-07-15' },
+  { title: 'Ireland General Election (latest)', targetDate: '2029-11-17' },
+
+  // ECB Governing Council monetary-policy decisions, remainder of 2026
+  { title: 'ECB rate decision', targetDate: '2026-04-30' },
+  { title: 'ECB rate decision', targetDate: '2026-06-11' },
+  { title: 'ECB rate decision', targetDate: '2026-07-23' },
+  { title: 'ECB rate decision', targetDate: '2026-09-10' },
+  { title: 'ECB rate decision', targetDate: '2026-10-29' },
+  { title: 'ECB rate decision', targetDate: '2026-12-17' },
+
+  // EU-level
+  { title: 'European Council (summer)', targetDate: '2026-06-25' },
+  { title: 'European Council (autumn)', targetDate: '2026-10-22' },
+
+  // International flagship releases
+  { title: 'OECD Economic Outlook (summer)', targetDate: '2026-06-10' },
+  { title: 'OECD Economic Outlook (autumn)', targetDate: '2026-11-25' },
+  { title: 'IMF World Economic Outlook (Oct)', targetDate: '2026-10-14' },
 ]
+
+/**
+ * Returns events still in the future (inclusive of today), sorted
+ * ascending by target date. Use this in components instead of reading
+ * COUNTDOWN_EVENTS directly so the dashboard self-heals as events pass.
+ */
+export function upcomingEvents(events = COUNTDOWN_EVENTS, now = new Date()) {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return events
+    .filter(e => {
+      const t = new Date(e.targetDate)
+      return !Number.isNaN(t.getTime()) && t >= today
+    })
+    .sort((a, b) => a.targetDate.localeCompare(b.targetDate))
+}
 
 // ──────────────────────────────────────────────────────────────────────
 // Reports — every URL is a real, verifiable publication landing page.

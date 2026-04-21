@@ -33,6 +33,12 @@ const INDICATORS = {
 const GLOBAL_GROWTH_COUNTRIES = ['CHN', 'EURO', 'GBR', 'USA', 'ADVEC']
 const GLOBAL_GROWTH_INDICATOR = 'NGDP_RPCH'
 
+// Peer-group fiscal indicators (for Peer Benchmarks / Public Finances pages).
+// WEO fiscal series are comparable across countries because they are
+// reported on a harmonised basis by IMF country desks.
+const PEER_FISCAL_COUNTRIES = ['IRL', 'DEU', 'NLD', 'FRA', 'GBR', 'USA']
+const PEER_FISCAL_INDICATORS = ['GGXCNL_NGDP', 'GGXWDG_NGDP']
+
 async function fetchIndicator(code, country = COUNTRY) {
   const url = `${BASE_URL}/${code}/${country}`
   console.log(`  Fetching ${code} for ${country} ...`)
@@ -90,6 +96,31 @@ async function main() {
     }
   }
 
+  // Peer fiscal panel (IE + comparator group × fiscal indicators)
+  console.log('\nFetching peer fiscal panel (IMF WEO)...')
+  const peerFiscal = {}
+  for (const iso of PEER_FISCAL_COUNTRIES) {
+    peerFiscal[iso] = {}
+    for (const code of PEER_FISCAL_INDICATORS) {
+      try {
+        const yearData = await fetchIndicator(code, iso)
+        peerFiscal[iso][code] = Object.entries(yearData)
+          .filter(([, v]) => v !== null && v !== undefined && v !== '')
+          .map(([year, value]) => ({
+            period: year,
+            value: Math.round(value * 100) / 100,
+            forecast: parseInt(year) > currentYear,
+          }))
+          .sort((a, b) => (a.period < b.period ? -1 : 1))
+      } catch (e) {
+        console.error(`  ✗ ${iso}/${code}: ${e.message}`)
+        peerFiscal[iso][code] = []
+      }
+    }
+    const points = Object.values(peerFiscal[iso]).reduce((s, a) => s + a.length, 0)
+    console.log(`  ✓ ${iso}: ${points} data points across ${PEER_FISCAL_INDICATORS.length} series`)
+  }
+
   mkdirSync(OUT_DIR, { recursive: true })
 
   const output = {
@@ -97,6 +128,7 @@ async function main() {
     country: COUNTRY,
     indicators: result,
     globalGrowth,
+    peerFiscal,
   }
 
   writeFileSync(OUT_FILE, JSON.stringify(output, null, 2))

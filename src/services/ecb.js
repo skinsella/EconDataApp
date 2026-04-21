@@ -1,9 +1,13 @@
 import { fetchWithCache } from './api'
 
-const BASE_URL = 'https://sdw-wsrest.ecb.europa.eu/service/data'
+// ECB Data Portal (replaces the retired SDW REST endpoint
+// https://sdw-wsrest.ecb.europa.eu/service/data which was decommissioned
+// in 2024). The SDMX-JSON response shape is unchanged, so downstream
+// parsing below continues to work.
+const BASE_URL = 'https://data-api.ecb.europa.eu/service/data'
 
 /**
- * Fetch ECB data via SDMX REST API.
+ * Fetch ECB data via the ECB Data Portal SDMX REST API.
  * seriesKey example: 'EXR/M.USD.EUR.SP00.A' or 'ICP/M.IE.N.000000.4.ANR'
  * Returns an array of { period, value } sorted by period.
  */

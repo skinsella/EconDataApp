@@ -117,6 +117,7 @@ export default function EnergyTracker() {
         if (category !== 'all') {
           measures = measures.filter(m => m.category === category)
         }
+        measures = [...measures].sort((a, b) => (b.announced || '').localeCompare(a.announced || ''))
         return { ...c, measures }
       })
       .filter(c => onlyWithMeasures ? c.measures.length > 0 : true)
@@ -162,8 +163,9 @@ export default function EnergyTracker() {
             <p>
               Inspired by the IEA <em>Energy Crisis Policy Response Tracker</em> (last IEA update 14 April 2026). Measures
               are grouped into two pillars: <strong>Energy Conservation</strong> and <strong>Consumer Support</strong>.
-              Most acute-crisis (2022-23) electricity and gas price caps have expired; surviving measures cluster around
-              fuel taxation, retail-margin discipline and targeted support for vulnerable households and specific sectors.
+              The 2022-23 electricity and gas price caps have largely expired, but since March 2026 the Iran-war fuel-price shock
+              has triggered a fresh wave of excise cuts, sectoral support schemes and — in Ireland's case — a post-protest €505m
+              top-up on 13 April 2026 and a voluntary fuel-conservation campaign.
             </p>
             <p>
               Each entry links to a primary government, EU-institution or IEA source for verification. Extend

@@ -15,6 +15,8 @@ import CSOReleases from './pages/CSOReleases'
 import DaysUntil from './pages/DaysUntil'
 import DataSources from './pages/DataSources'
 import EnergyTracker from './pages/EnergyTracker'
+import Employment from './pages/Employment'
+import PeerBenchmarks from './pages/PeerBenchmarks'
 
 export default function App() {
   return (
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/cso-releases" element={<CSOReleases />} />
           <Route path="/days-until" element={<DaysUntil />} />
           <Route path="/energy-tracker" element={<EnergyTracker />} />
+          <Route path="/employment" element={<Employment />} />
+          <Route path="/peer-benchmarks" element={<PeerBenchmarks />} />
           <Route path="/data-sources" element={<DataSources />} />
         </Routes>
       </Layout>
